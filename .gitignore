@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Node
+node_modules/
+dist/
+build/
+.next/
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Data / models / large artifacts
+data/raw/
+data/synthea/output/
+*.ndjson
+*.parquet
+*.bin
+*.gguf
+models/
+
+# Logs
+*.log
+logs/
+
+# Local notes (PLAN.md stays — it's the public roadmap context for this workspace only)
+.scratch/
