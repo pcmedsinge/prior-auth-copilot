@@ -118,6 +118,7 @@ prior-auth-copilot/
 ├── LEADERSHIP.md               ← how I'd lead a squad shipping this
 ├── LICENSE                     ← Apache-2.0
 ├── docs/
+│   ├── WORKFLOW.md             ← how this project is run (read first)
 │   ├── adr/                    ← Architecture Decision Records
 │   ├── personas/               ← user persona briefs
 │   └── phases/                 ← sub-phase plans (4.1 → 4.5)
