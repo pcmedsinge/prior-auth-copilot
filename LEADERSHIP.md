@@ -1,8 +1,6 @@
 # Leadership lens — how I'd lead a squad shipping this
 
-This file exists because most open-source repos answer *"can this person code?"* but not *"can this person lead a team to ship this into a regulated production environment?"*. The Prior-Auth Co-pilot is a deliberately load-bearing artifact: every architectural choice, every ADR, every eval gate is also a leadership decision.
-
-If a payer or provider client asked me to take this from reference implementation to a 6-month pilot in production, here is how I would run it.
+Notes on how this project would be run as a real engagement: squad shape, hiring bar, sprint cadence, eval gates, risk register, and on-call/runbook approach. Written as if a payer or provider client asked me to take this from reference implementation to a 6-month pilot in production.
 
 ---
 

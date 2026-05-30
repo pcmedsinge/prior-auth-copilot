@@ -45,3 +45,7 @@ logs/
 
 # Local notes (PLAN.md stays — it's the public roadmap context for this workspace only)
 .scratch/
+
+# Local-only planning notes (not part of the project)
+PLAN.md
+

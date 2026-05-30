@@ -1,8 +1,6 @@
-# Phase 4 — Sub-phase breakdown
+# Sub-phase breakdown
 
-Phase 4 of the Healthcare AI Repositioning Plan: build the Prior-Auth Co-pilot in weekly slices.
-
-Each sub-phase ends with: a runnable demo · an eval scorecard · an ADR update (if needed) · a LinkedIn post.
+The Prior-Auth Co-pilot is built in weekly slices. Each sub-phase ends with: a runnable demo · an eval scorecard · an ADR update (if needed).
 
 | Sub-phase | Week | Title | Doc | Status |
 |---|---|---|---|---|
@@ -17,5 +15,4 @@ Each sub-phase ends with: a runnable demo · an eval scorecard · an ADR update 
 1. Demo runs end-to-end with one command (or one `make` target).
 2. Eval scorecard committed to the repo and posted on the Projects board.
 3. ADRs added/updated as needed; never silent architectural changes.
-4. LinkedIn post drafted (alternating IC-voice / leader-voice per Phase 6).
-5. `README.md` status badge and roadmap table updated.
+4. `README.md` status badge and roadmap table updated.

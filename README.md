@@ -128,8 +128,4 @@ prior-auth-copilot/
 
 ## Author
 
-**Parag Medsinge** — Healthcare AI Solutions Architect & Technical Leader · Long career in Healthcare IT · Building Agentic Clinical AI on FHIR · openEHR · MCP.
-
-> *Open to Healthcare AI Solutions Architect, Technical Leader, or Fractional / Advisory roles where deep healthcare-IT domain expertise meets applied AI.*
-
-[GitHub @pcmedsinge](https://github.com/pcmedsinge) · [LinkedIn](https://linkedin.com/in/paragmedsinge)
+**Parag Medsinge** — [GitHub @pcmedsinge](https://github.com/pcmedsinge)
