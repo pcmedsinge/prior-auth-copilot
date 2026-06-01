@@ -10,6 +10,7 @@ Format: lightweight [MADR-style](https://adr.github.io/madr/) — Context → De
 |---|---|---|
 | [0001](0001-langgraph-over-crewai-autogen.md) | Use LangGraph as the agent orchestration framework | Accepted |
 | [0002](0002-fhir-server-choice.md) | Local FHIR server choice (HAPI vs Medplum vs Aidbox) | Accepted |
+| [0003](0003-langgraph-state-shape.md) | LangGraph state shape (TypedDict container, Pydantic leaves) | Accepted |
 
 ## When to write an ADR
 
