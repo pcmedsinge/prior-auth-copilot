@@ -1,0 +1,16 @@
+# Pinned generation seeds for the Prior-Auth Co-pilot Synthea pipeline.
+# Format: one integer per line. Blank lines and # comments are ignored.
+#
+# Usage: scripts/load_synthea.py generate reads SYNTHEA_SEEDS_FILE and runs
+# Synthea once with each seed (-s <seed> -p <batch_size>).
+#
+# How to add seeds: run `python -c "import random; print(random.randint(1,999999))"` and append.
+# Do NOT remove existing seeds once the manifest.json has been committed — the
+# curate step is deterministic given the same seeds, so removing a seed changes
+# which patients end up in the manifest and breaks eval reproducibility.
+#
+# Seed | Approximate role
+# ---- | ----------------
+142857  # Primary seed — ~200 patient pool (all 4 evidence paths)
+314159  # Alternate A — used if primary pool yields < 5 evidence-missing cases
+271828  # Alternate B — reserved for Phase 4.3 expansion

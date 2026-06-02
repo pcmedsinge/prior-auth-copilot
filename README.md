@@ -3,7 +3,7 @@
 > **Open-source, agentic, FHIR-native Prior Authorization co-pilot — built for the CMS-0057 January 2027 mandate.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: Phase 4.1 — Problem framing](https://img.shields.io/badge/status-Phase%204.1%20%C2%B7%20Problem%20Framing-orange.svg)](docs/phases/)
+[![Status: Phase 4.2 — Evidence retrieval](https://img.shields.io/badge/status-Phase%204.2%20%C2%B7%20Evidence%20Retrieval-orange.svg)](docs/phases/)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-red.svg)](https://hl7.org/fhir/R4/)
 [![Da Vinci PAS](https://img.shields.io/badge/Da%20Vinci-PAS%20%C2%B7%20CRD%20%C2%B7%20DTR-purple.svg)](https://hl7.org/fhir/us/davinci-pas/)
 
@@ -114,16 +114,58 @@ Full persona briefs: [`docs/personas/`](docs/personas/).
 
 ```
 prior-auth-copilot/
-├── README.md                   ← you are here
-├── LEADERSHIP.md               ← how I'd lead a squad shipping this
-├── LICENSE                     ← Apache-2.0
+├── README.md                          ← you are here
+├── LEADERSHIP.md                      ← how I'd lead a squad shipping this
+├── LICENSE                            ← Apache-2.0
+├── Makefile                           ← fhir-up, load-synthea, smoke, demo-evidence
+├── pyproject.toml                     ← Python dependencies
+├── docker-compose.yml                 ← HAPI FHIR + Synthea services
+├── docker/
+│   ├── hapi/                          ← HAPI config, IG fetch scripts
+│   └── synthea/                       ← Synthea Docker image
+├── data/
+│   └── synthea-config/
+│       ├── modules/low_back_pain.json ← custom GMF module (PA test cases)
+│       ├── synthea.properties         ← generation settings
+│       ├── seeds.txt                  ← pinned seeds for reproducibility
+│       └── manifest.json             ← curated 50-patient set (generated)
+├── scripts/
+│   ├── load_synthea.py               ← generate → curate → load pipeline
+│   └── smoke_fhir.py                 ← post-load verification
 ├── docs/
-│   ├── WORKFLOW.md             ← how this project is run (read first)
-│   ├── adr/                    ← Architecture Decision Records
-│   ├── personas/               ← user persona briefs
-│   └── phases/                 ← sub-phase plans (4.1 → 4.5)
-└── (code lands in Phase 4.2)
+│   ├── WORKFLOW.md                   ← how this project is run (read first)
+│   ├── adr/                          ← Architecture Decision Records
+│   ├── personas/                     ← user persona briefs
+│   └── phases/                       ← sub-phase plans (4.1 → 4.5)
+└── out/                              ← generated Synthea bundles (gitignored)
 ```
+
+---
+
+## Quick start (Phase 4.2 — Synthea pipeline)
+
+**Prerequisites**: Docker Desktop running, Git Bash or WSL2 (Windows), Python 3.11+.
+
+```bash
+# 1. Fetch IG tarballs (once per checkout)
+bash docker/hapi/fetch_igs.sh
+
+# 2. Start the local HAPI FHIR server (waits until healthy)
+make fhir-up
+
+# 3. Build the Synthea image, generate ~200 patients, curate 50, load into HAPI
+make load-synthea
+
+# 4. Verify — should print "SMOKE TEST PASSED"
+make smoke
+
+# 5. Check patient count
+curl 'http://localhost:8082/fhir/Patient?_summary=count'
+```
+
+Full pipeline runs from a clean checkout in **< 10 minutes** on Docker Desktop.
+
+> **Windows note**: `make` requires Git Bash or WSL2. Open the terminal in one of those shells before running the commands above.
 
 ---
 

@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  fhir:
+    image: hapiproject/hapi:v7.4.0
+    container_name: prior-auth-hapi
+    ports:
+      - "8082:8080"
+    volumes:
+      - hapi-data:/data/hapi
+      - ./docker/hapi/igs:/igs:ro
+      - ./docker/hapi/application.yaml:/data/hapi/application.yaml:ro
+    environment:
+      SPRING_CONFIG_LOCATION: /data/hapi/application.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/fhir/metadata > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  synthea:
+    build:
+      context: docker/synthea
+      dockerfile: Dockerfile
+    image: prior-auth-synthea:latest
+    profiles:
+      - tools   # only runs when explicitly invoked; not started by `make fhir-up`
+    volumes:
+      - ./out/synthea/fhir:/output
+      - ./data/synthea-config/modules:/modules:ro
+      - ./data/synthea-config/synthea.properties:/synthea/synthea.properties:ro
+    # Command and -p / -s flags are passed at runtime by load_synthea.py generate.
+
+volumes:
+  hapi-data:
+    name: prior-auth-hapi-data

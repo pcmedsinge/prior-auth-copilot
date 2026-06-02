@@ -1,0 +1,438 @@
+{
+  "name": "Chronic Low Back Pain — Prior Auth PA Test",
+  "remarks": [
+    "Synthea GMF module for MRI lumbar spine prior-authorization test cases.",
+    "Designed for Phase 4.2 of the Prior-Auth Co-pilot project.",
+    "",
+    "Produces 4 evidence paths (detected by scripts/load_synthea.py curate):",
+    "  complete (75%)             — NSAID + PT >=6 weeks + optional radiculopathy",
+    "  missing_conservative (8%)  — LBP diagnosed, NO therapy documented (PA denial case)",
+    "  short_conservative (9%)    — Only 1 PT session < 6 weeks total (PA denial case)",
+    "  nsaids_only (8%)           — NSAIDs prescribed, PT NOT documented (PA denial case)",
+    "",
+    "Key FHIR resources produced (what the curate checklist tests for):",
+    "  Condition         SNOMED 279039007  Low back pain (all paths)",
+    "  Condition         SNOMED 57054005   Lumbosacral radiculopathy (complete+neuro, 65%)",
+    "  MedicationRequest RxNorm  197803    Ibuprofen 400 MG Oral Tablet (complete/short/nsaids paths)",
+    "  Procedure         SNOMED 36048009   Physical therapy procedure (complete/short paths)",
+    "  Observation       LOINC  72514-3    Pain severity 0-10 score (all paths)"
+  ],
+  "states": {
+
+    "Initial": {
+      "type": "Initial",
+      "direct_transition": "Age_Guard"
+    },
+
+    "Age_Guard": {
+      "type": "Guard",
+      "remarks": ["Most lumbar spine PA requests are for adults 30-70."],
+      "allow": {
+        "condition_type": "Age",
+        "operator": ">=",
+        "quantity": 30,
+        "unit": "years"
+      },
+      "direct_transition": "Onset_Delay"
+    },
+
+    "Onset_Delay": {
+      "type": "Delay",
+      "remarks": ["Spread onset across a 15-year window so patient ages vary realistically."],
+      "range": { "low": 0, "high": 15, "unit": "years" },
+      "direct_transition": "Initial_LBP_Encounter"
+    },
+
+    "Initial_LBP_Encounter": {
+      "type": "Encounter",
+      "encounter_class": "ambulatory",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "185345009",
+          "display": "Encounter for symptom"
+        }
+      ],
+      "direct_transition": "LBP_Condition_Onset"
+    },
+
+    "LBP_Condition_Onset": {
+      "type": "ConditionOnset",
+      "assign_to_attribute": "low_back_pain",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "279039007",
+          "display": "Low back pain (finding)"
+        }
+      ],
+      "direct_transition": "Initial_Pain_Score"
+    },
+
+    "Initial_Pain_Score": {
+      "type": "Observation",
+      "category": "survey",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "72514-3",
+          "display": "Pain severity - 0-10 verbal numeric rating [Score] - Reported"
+        }
+      ],
+      "range": { "low": 6, "high": 9 },
+      "unit": "{score}",
+      "direct_transition": "Evidence_Branch"
+    },
+
+    "Evidence_Branch": {
+      "type": "Simple",
+      "remarks": [
+        "Branch probabilities sum to 1.0.",
+        "At ~200 patients: ~150 complete, ~16 missing_conservative, ~18 short_conservative, ~16 nsaids_only.",
+        "Curate script selects 45 complete + 5 evidence-missing = 50 final patients."
+      ],
+      "distributed_transition": [
+        { "distribution": 0.75, "transition": "Complete_NSAID_Order" },
+        { "distribution": 0.08, "transition": "Missing_Conservative_Encounter_End" },
+        { "distribution": 0.09, "transition": "Short_NSAID_Order" },
+        { "distribution": 0.08, "transition": "NSAIDs_Only_NSAID_Order" }
+      ]
+    },
+
+    "Complete_NSAID_Order": {
+      "type": "MedicationOrder",
+      "assign_to_attribute": "nsaid_medication",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "197803",
+          "display": "Ibuprofen 400 MG Oral Tablet"
+        }
+      ],
+      "prescription": {
+        "dosage": {
+          "amount": 1,
+          "frequency": 3,
+          "period": 1,
+          "unit": "days"
+        },
+        "duration": { "quantity": 8, "unit": "weeks" },
+        "as_needed": false
+      },
+      "direct_transition": "Initial_Encounter_End"
+    },
+
+    "Initial_Encounter_End": {
+      "type": "EncounterEnd",
+      "direct_transition": "Delay_To_PT1"
+    },
+
+    "Delay_To_PT1": {
+      "type": "Delay",
+      "remarks": ["First PT session scheduled ~2 weeks after initial visit."],
+      "range": { "low": 10, "high": 18, "unit": "days" },
+      "direct_transition": "PT_Encounter_1"
+    },
+
+    "PT_Encounter_1": {
+      "type": "Encounter",
+      "encounter_class": "ambulatory",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "185349003",
+          "display": "Encounter for check up (procedure)"
+        }
+      ],
+      "direct_transition": "PT_Session_1"
+    },
+
+    "PT_Session_1": {
+      "type": "Procedure",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "36048009",
+          "display": "Physical therapy procedure (regime/therapy)"
+        }
+      ],
+      "duration": { "low": 45, "high": 60, "unit": "minutes" },
+      "direct_transition": "PT_Encounter_1_End"
+    },
+
+    "PT_Encounter_1_End": {
+      "type": "EncounterEnd",
+      "direct_transition": "Delay_Between_PT"
+    },
+
+    "Delay_Between_PT": {
+      "type": "Delay",
+      "remarks": [
+        "28-35 days between PT sessions.",
+        "Total elapsed since initial encounter: ~38-53 days (>= 6 weeks).",
+        "This is the key timing the curate checklist validates."
+      ],
+      "range": { "low": 28, "high": 35, "unit": "days" },
+      "direct_transition": "PT_Encounter_2"
+    },
+
+    "PT_Encounter_2": {
+      "type": "Encounter",
+      "encounter_class": "ambulatory",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "185349003",
+          "display": "Encounter for check up (procedure)"
+        }
+      ],
+      "direct_transition": "PT_Session_2"
+    },
+
+    "PT_Session_2": {
+      "type": "Procedure",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "36048009",
+          "display": "Physical therapy procedure (regime/therapy)"
+        }
+      ],
+      "duration": { "low": 45, "high": 60, "unit": "minutes" },
+      "direct_transition": "Post_PT_Pain_Score"
+    },
+
+    "Post_PT_Pain_Score": {
+      "type": "Observation",
+      "remarks": ["Score 5-8 shows partial improvement — supports 'failed conservative therapy' argument."],
+      "category": "survey",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "72514-3",
+          "display": "Pain severity - 0-10 verbal numeric rating [Score] - Reported"
+        }
+      ],
+      "range": { "low": 5, "high": 8 },
+      "unit": "{score}",
+      "direct_transition": "Neuro_Branch"
+    },
+
+    "Neuro_Branch": {
+      "type": "Simple",
+      "remarks": ["65% of complete-path patients have documented radiculopathy — the strongest PA approval signal."],
+      "distributed_transition": [
+        { "distribution": 0.65, "transition": "Radiculopathy_Onset" },
+        { "distribution": 0.35, "transition": "Complete_NSAID_End" }
+      ]
+    },
+
+    "Radiculopathy_Onset": {
+      "type": "ConditionOnset",
+      "remarks": ["Lumbosacral radiculopathy documented during PT follow-up — neurological deficit present."],
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "57054005",
+          "display": "Lumbosacral radiculopathy (disorder)"
+        }
+      ],
+      "direct_transition": "Complete_NSAID_End"
+    },
+
+    "Complete_NSAID_End": {
+      "type": "MedicationEnd",
+      "referenced_by_attribute": "nsaid_medication",
+      "direct_transition": "Complete_Encounter_End"
+    },
+
+    "Complete_Encounter_End": {
+      "type": "EncounterEnd",
+      "direct_transition": "Terminal"
+    },
+
+    "Missing_Conservative_Encounter_End": {
+      "type": "EncounterEnd",
+      "remarks": [
+        "Evidence-missing path: LBP diagnosed but no therapy documented.",
+        "Curate script flags: missing_nsaid=true, missing_pt=true.",
+        "Common real-world denial reason: no conservative therapy on record."
+      ],
+      "direct_transition": "Terminal"
+    },
+
+    "Short_NSAID_Order": {
+      "type": "MedicationOrder",
+      "assign_to_attribute": "nsaid_medication_short",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "197803",
+          "display": "Ibuprofen 400 MG Oral Tablet"
+        }
+      ],
+      "prescription": {
+        "dosage": {
+          "amount": 1,
+          "frequency": 3,
+          "period": 1,
+          "unit": "days"
+        },
+        "duration": { "quantity": 2, "unit": "weeks" },
+        "as_needed": false
+      },
+      "direct_transition": "Short_Initial_Encounter_End"
+    },
+
+    "Short_Initial_Encounter_End": {
+      "type": "EncounterEnd",
+      "direct_transition": "Short_Delay_To_PT"
+    },
+
+    "Short_Delay_To_PT": {
+      "type": "Delay",
+      "range": { "low": 8, "high": 12, "unit": "days" },
+      "direct_transition": "Short_PT_Encounter"
+    },
+
+    "Short_PT_Encounter": {
+      "type": "Encounter",
+      "encounter_class": "ambulatory",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "185349003",
+          "display": "Encounter for check up (procedure)"
+        }
+      ],
+      "direct_transition": "Short_PT_Session"
+    },
+
+    "Short_PT_Session": {
+      "type": "Procedure",
+      "remarks": [
+        "Only 1 PT session, ~10 days after initial visit.",
+        "Total elapsed: ~18-22 days — well under the 6-week threshold.",
+        "Curate script flags: short_conservative=true (only 1 PT session)."
+      ],
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "36048009",
+          "display": "Physical therapy procedure (regime/therapy)"
+        }
+      ],
+      "duration": { "low": 45, "high": 60, "unit": "minutes" },
+      "direct_transition": "Short_PT_Pain_Score"
+    },
+
+    "Short_PT_Pain_Score": {
+      "type": "Observation",
+      "category": "survey",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "72514-3",
+          "display": "Pain severity - 0-10 verbal numeric rating [Score] - Reported"
+        }
+      ],
+      "range": { "low": 6, "high": 8 },
+      "unit": "{score}",
+      "direct_transition": "Short_NSAID_End"
+    },
+
+    "Short_NSAID_End": {
+      "type": "MedicationEnd",
+      "referenced_by_attribute": "nsaid_medication_short",
+      "direct_transition": "Short_PT_Encounter_End"
+    },
+
+    "Short_PT_Encounter_End": {
+      "type": "EncounterEnd",
+      "direct_transition": "Terminal"
+    },
+
+    "NSAIDs_Only_NSAID_Order": {
+      "type": "MedicationOrder",
+      "assign_to_attribute": "nsaid_medication_only",
+      "codes": [
+        {
+          "system": "RxNorm",
+          "code": "197803",
+          "display": "Ibuprofen 400 MG Oral Tablet"
+        }
+      ],
+      "prescription": {
+        "dosage": {
+          "amount": 1,
+          "frequency": 3,
+          "period": 1,
+          "unit": "days"
+        },
+        "duration": { "quantity": 8, "unit": "weeks" },
+        "as_needed": false
+      },
+      "direct_transition": "NSAIDs_Only_Initial_Encounter_End"
+    },
+
+    "NSAIDs_Only_Initial_Encounter_End": {
+      "type": "EncounterEnd",
+      "direct_transition": "NSAIDs_Only_Delay"
+    },
+
+    "NSAIDs_Only_Delay": {
+      "type": "Delay",
+      "remarks": ["Patient on NSAIDs for 6-8 weeks but never referred to PT."],
+      "range": { "low": 42, "high": 56, "unit": "days" },
+      "direct_transition": "NSAIDs_Only_Follow_Up_Encounter"
+    },
+
+    "NSAIDs_Only_Follow_Up_Encounter": {
+      "type": "Encounter",
+      "encounter_class": "ambulatory",
+      "codes": [
+        {
+          "system": "SNOMED-CT",
+          "code": "185349003",
+          "display": "Encounter for check up (procedure)"
+        }
+      ],
+      "direct_transition": "NSAIDs_Only_Pain_Score"
+    },
+
+    "NSAIDs_Only_Pain_Score": {
+      "type": "Observation",
+      "remarks": [
+        "NSAID-only follow-up: pain partially persistent.",
+        "Curate script flags: missing_pt=true (no Procedure/36048009 in bundle)."
+      ],
+      "category": "survey",
+      "codes": [
+        {
+          "system": "LOINC",
+          "code": "72514-3",
+          "display": "Pain severity - 0-10 verbal numeric rating [Score] - Reported"
+        }
+      ],
+      "range": { "low": 5, "high": 8 },
+      "unit": "{score}",
+      "direct_transition": "NSAIDs_Only_NSAID_End"
+    },
+
+    "NSAIDs_Only_NSAID_End": {
+      "type": "MedicationEnd",
+      "referenced_by_attribute": "nsaid_medication_only",
+      "direct_transition": "NSAIDs_Only_Encounter_End"
+    },
+
+    "NSAIDs_Only_Encounter_End": {
+      "type": "EncounterEnd",
+      "direct_transition": "Terminal"
+    },
+
+    "Terminal": {
+      "type": "Terminal"
+    }
+
+  }
+}

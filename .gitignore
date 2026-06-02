@@ -39,6 +39,13 @@ data/synthea/output/
 *.gguf
 models/
 
+# Synthea generated output (re-created by `make load-synthea`)
+out/
+
+# HAPI IG tarballs (fetched by docker/hapi/fetch_igs.sh — not committed)
+docker/hapi/igs/*.tgz
+docker/hapi/igs/*.tar.gz
+
 # Logs
 *.log
 logs/

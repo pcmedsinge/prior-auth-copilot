@@ -1,0 +1,38 @@
+spring:
+  datasource:
+    url: 'jdbc:h2:file:/data/hapi/h2;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1'
+    username: sa
+    password: ''
+    driverClassName: org.h2.Driver
+  jpa:
+    properties:
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect
+
+hapi:
+  fhir:
+    fhir_version: R4
+    server_address: http://localhost:8082/fhir
+    allow_contains_searches: true
+    allow_multiple_delete: true
+    allow_external_references: true
+    expunge_enabled: true
+    status_based_reindexing_disabled: true
+
+    # Validation — warn on non-conformant writes but do not reject.
+    # Phase 4.4 will tighten this to reject for PAS profile conformance gating.
+    validation:
+      requests_enabled: false
+      responses_enabled: false
+
+    # IG loading — drop tarballs in docker/hapi/igs/ (see docker/hapi/README.md).
+    implementationGuides:
+      hl7_fhir_us_core:
+        name: hl7.fhir.us.core
+        version: 6.1.0
+        reloadExisting: false
+        installMode: STORE_AND_INSTALL
+      hl7_fhir_us_davinci_pas:
+        name: hl7.fhir.us.davinci-pas
+        version: 2.0.1
+        reloadExisting: false
+        installMode: STORE_AND_INSTALL
