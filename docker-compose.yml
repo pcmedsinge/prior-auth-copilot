@@ -33,6 +33,29 @@ services:
       - ./data/synthea-config/synthea.properties:/synthea/synthea.properties:ro
     # Command and -p / -s flags are passed at runtime by load_synthea.py generate.
 
+  mcp-fhir:
+    # mcp-fhir in SSE mode — for MCP Inspector / Claude Desktop / Phase 4.5+.
+    # For the LangGraph Evidence Gatherer node (Issue #5), call tools.py directly
+    # (no Docker hop needed — Python-to-Python import).
+    image: python:3.12-slim
+    container_name: prior-auth-mcp-fhir
+    profiles:
+      - tools   # explicit only; not started by `make fhir-up`
+    command: >
+      sh -c "pip install mcp-fhir --quiet && mcp-fhir"
+    ports:
+      - "8084:8000"
+    environment:
+      FHIR_BASE_URL: "http://fhir:8080/fhir"   # inside compose network HAPI is on :8080
+      HAPI_VALIDATOR_URL: "http://localhost:8083"
+      MCP_TRANSPORT: "sse"
+      MCP_PORT: "8000"
+      LOG_FORMAT: "console"
+      SMART_ENABLED: "false"
+    depends_on:
+      fhir:
+        condition: service_healthy
+
 volumes:
   hapi-data:
     name: prior-auth-hapi-data

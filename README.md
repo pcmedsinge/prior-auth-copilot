@@ -82,8 +82,8 @@ Built in weekly slices. Each slice ships a runnable demo and a LinkedIn write-up
 
 | Sub-phase | Focus | Status |
 |---|---|---|
-| [4.1](docs/phases/4.1-problem-framing.md) | Problem framing, repo, architecture, LEADERSHIP.md, ADR-0001 | ▶ In progress |
-| [4.2](docs/phases/4.2-evidence-retrieval.md) | Synthea data + FHIR MCP evidence retrieval | ⏳ Next |
+| [4.1](docs/phases/4.1-problem-framing.md) | Problem framing, repo, architecture, LEADERSHIP.md, ADR-0001 | ✅ Done |
+| [4.2](docs/phases/4.2-evidence-retrieval.md) | Synthea data + FHIR MCP evidence retrieval | 🔄 In progress |
 | [4.3](docs/phases/4.3-medical-necessity-reasoner.md) | Medical necessity reasoner + RAG over NCDs/LCDs | ⏳ |
 | [4.4](docs/phases/4.4-pas-bundle-reviewer.md) | Da Vinci PAS bundle builder + reviewer agent | ⏳ |
 | [4.5](docs/phases/4.5-evals-release.md) | Evals harness, outcome metrics, v1.0 release | ⏳ |
@@ -117,9 +117,9 @@ prior-auth-copilot/
 ├── README.md                          ← you are here
 ├── LEADERSHIP.md                      ← how I'd lead a squad shipping this
 ├── LICENSE                            ← Apache-2.0
-├── Makefile                           ← fhir-up, load-synthea, smoke, demo-evidence
-├── pyproject.toml                     ← Python dependencies
-├── docker-compose.yml                 ← HAPI FHIR + Synthea services
+├── Makefile                           ← fhir-up, load-synthea, smoke, smoke-tools, mcp-up
+├── pyproject.toml                     ← Python dependencies (mcp-fhir, requests, httpx)
+├── docker-compose.yml                 ← HAPI FHIR + Synthea + mcp-fhir services
 ├── docker/
 │   ├── hapi/                          ← HAPI config, IG fetch scripts
 │   └── synthea/                       ← Synthea Docker image
@@ -129,11 +129,17 @@ prior-auth-copilot/
 │       ├── synthea.properties         ← generation settings
 │       ├── seeds.txt                  ← pinned seeds for reproducibility
 │       └── manifest.json             ← curated 50-patient set (generated)
+├── src/
+│   └── prior_auth_copilot/
+│       └── evidence/
+│           └── tools.py              ← 6 evidence-retrieval tools (find_observations etc.)
 ├── scripts/
 │   ├── load_synthea.py               ← generate → curate → load pipeline
-│   └── smoke_fhir.py                 ← post-load verification
+│   ├── smoke_fhir.py                 ← post-load HAPI verification
+│   └── smoke_mcp_tools.py           ← verify all 6 evidence tools callable
 ├── docs/
 │   ├── WORKFLOW.md                   ← how this project is run (read first)
+│   ├── mcp-tools.md                  ← evidence tool signatures + examples
 │   ├── adr/                          ← Architecture Decision Records
 │   ├── personas/                     ← user persona briefs
 │   └── phases/                       ← sub-phase plans (4.1 → 4.5)
@@ -144,7 +150,7 @@ prior-auth-copilot/
 
 ## Quick start (Phase 4.2 — Synthea pipeline)
 
-**Prerequisites**: Docker Desktop running, Git Bash or WSL2 (Windows), Python 3.11+.
+**Prerequisites**: Docker Desktop running, Git Bash or WSL2 (Windows), Python 3.12+.
 
 ```bash
 # 1. Fetch IG tarballs (once per checkout)

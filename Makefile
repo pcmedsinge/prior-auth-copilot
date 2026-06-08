@@ -32,6 +32,17 @@ fhir-reset: ## ⚠ Stop HAPI and WIPE the H2 data volume (full reset)
 	docker compose down -v
 	@echo "Volume prior-auth-hapi-data removed."
 
+# ── MCP server (SSE mode — for MCP Inspector / Phase 4.5+) ───────────────
+
+.PHONY: mcp-up
+mcp-up: ## Start mcp-fhir in SSE mode (requires fhir-up first)
+	docker compose --profile tools up -d mcp-fhir
+	@echo "mcp-fhir SSE endpoint: http://localhost:8084/sse"
+
+.PHONY: mcp-down
+mcp-down: ## Stop the mcp-fhir SSE container
+	docker compose stop mcp-fhir
+
 # ── Synthea pipeline ─────────────────────────────────────────────────────────
 
 .PHONY: load-synthea
@@ -50,6 +61,10 @@ load-synthea-fast: ## Curate + load only (skips generation if out/ already popul
 .PHONY: smoke
 smoke: ## Run smoke test against live HAPI (verifies patient count + evidence tags)
 	python scripts/smoke_fhir.py
+
+.PHONY: smoke-tools
+smoke-tools: ## Verify all 6 evidence-retrieval tools call HAPI without error
+	python scripts/smoke_mcp_tools.py
 
 .PHONY: demo-evidence
 demo-evidence: ## Run the evidence-retrieval demo for a given patient
