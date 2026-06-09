@@ -11,6 +11,9 @@ Format: lightweight [MADR-style](https://adr.github.io/madr/) — Context → De
 | [0001](0001-langgraph-over-crewai-autogen.md) | Use LangGraph as the agent orchestration framework | Accepted |
 | [0002](0002-fhir-server-choice.md) | Local FHIR server choice (HAPI vs Medplum vs Aidbox) | Accepted |
 | [0003](0003-langgraph-state-shape.md) | LangGraph state shape (TypedDict container, Pydantic leaves) | Accepted |
+| [0004](0004-embedding-model.md) | Embedding model for the policy corpus (`text-embedding-3-small`) | Accepted |
+| [0005](0005-vector-store.md) | Vector store for the policy corpus (LanceDB embedded) | Accepted |
+| [0006](0006-reasoner-llm.md) | LLM for the Medical Necessity Reasoner (`gpt-4o`) | Accepted |
 
 ## When to write an ADR
 
