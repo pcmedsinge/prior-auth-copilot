@@ -46,8 +46,15 @@ services:
     ports:
       - "8084:8000"
     environment:
-      FHIR_BASE_URL: "http://fhir:8080/fhir"   # inside compose network HAPI is on :8080
+      FHIR_BASE_URL: "http://fhir:8080/fhir"
       HAPI_VALIDATOR_URL: "http://localhost:8083"
+      MCP_TRANSPORT: "sse"
+      MCP_PORT: "8000"
+      LOG_FORMAT: "console"
+      SMART_ENABLED: "false"
+    depends_on:
+      fhir:
+        condition: service_healthy
 
   payer-fhir:
     # Mock payer PAS $submit endpoint (ADR-0009).
@@ -69,13 +76,6 @@ services:
       retries: 10
       start_period: 60s
     restart: unless-stopped
-      MCP_TRANSPORT: "sse"
-      MCP_PORT: "8000"
-      LOG_FORMAT: "console"
-      SMART_ENABLED: "false"
-    depends_on:
-      fhir:
-        condition: service_healthy
 
 volumes:
   hapi-data:
