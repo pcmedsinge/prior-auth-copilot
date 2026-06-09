@@ -129,39 +129,39 @@ test: ## Run unit tests (no live HAPI or OpenAI required)
 
 .PHONY: evals-4.2
 evals-4.2: ## Run Phase 4.2 eval harness (requires fhir-up + load-synthea + OPENAI_API_KEY)
-	python evals/runners/run_4_2.py
+	PYTHONPATH=. python evals/runners/run_4_2.py
 
 .PHONY: evals-4.2-no-llm
 evals-4.2-no-llm: ## Run Phase 4.2 evals without LLM second pass (faster, deterministic only)
-	python evals/runners/run_4_2.py --no-llm
+	PYTHONPATH=. python evals/runners/run_4_2.py --no-llm
 
 .PHONY: evals-4.2-ci
 evals-4.2-ci: ## Run Phase 4.2 evals in CI mode (exits 1 if any target missed)
-	python evals/runners/run_4_2.py --ci
+	PYTHONPATH=. python evals/runners/run_4_2.py --ci
 
 .PHONY: evals-4.3
 evals-4.3: ## Run Phase 4.3 Reasoner eval harness (requires fhir-up + load-synthea + ingest-policies + OPENAI_API_KEY)
-	python evals/runners/run_4_3.py
+	PYTHONPATH=. python evals/runners/run_4_3.py
 
 .PHONY: evals-4.3-ci
 evals-4.3-ci: ## Run Phase 4.3 evals in CI mode
-	python evals/runners/run_4_3.py --ci
+	PYTHONPATH=. python evals/runners/run_4_3.py --ci
 
 .PHONY: evals-4.4
 evals-4.4: ## Run Phase 4.4 Bundle Builder eval harness
-	python evals/runners/run_4_4.py
+	PYTHONPATH=. python evals/runners/run_4_4.py
 
 .PHONY: evals
 evals: ## Run ALL phase evals and produce the v1.0 combined scorecard
-	python evals/runners/run_all.py
+	PYTHONPATH=. python evals/runners/run_all.py
 
 .PHONY: evals-ci
 evals-ci: ## Run all evals in CI mode (exits 1 if any gate missed)
-	python evals/runners/run_all.py --ci
+	PYTHONPATH=. python evals/runners/run_all.py --ci
 
 .PHONY: evals-fast
 evals-fast: ## Run all evals without LLM second pass (faster, deterministic only)
-	python evals/runners/run_all.py --no-llm
+	PYTHONPATH=. python evals/runners/run_all.py --no-llm
 
 # ── Policy corpus ─────────────────────────────────────────────────────────────
 

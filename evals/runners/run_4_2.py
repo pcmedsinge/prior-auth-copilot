@@ -38,8 +38,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 load_dotenv(REPO_ROOT / ".env", override=False)
 sys.path.insert(0, str(REPO_ROOT / "src"))
 
-from prior_auth_copilot.graph import build_graph  # noqa: E402
-from prior_auth_copilot.state import ServiceRequest  # noqa: E402
+# Phase 4.2 eval uses a minimal graph: Intake -> Evidence Gatherer only.
+# This avoids needing the Reasoner (gpt-4o) or policy store for evidence evals.
+from langgraph.graph import END, StateGraph  # noqa: E402
+from prior_auth_copilot.nodes.evidence_gatherer import evidence_gatherer_node  # noqa: E402
+from prior_auth_copilot.nodes.intake import intake_node  # noqa: E402
+from prior_auth_copilot.state import PAState, ServiceRequest  # noqa: E402
 from evals.metrics.evidence_metrics import (  # noqa: E402
     CaseResult,
     aggregate,
@@ -48,6 +52,21 @@ from evals.metrics.evidence_metrics import (  # noqa: E402
     p50,
     tool_call_accuracy,
 )
+
+
+def _build_evidence_graph():
+    """Minimal graph for Phase 4.2: Intake -> Evidence Gatherer -> END."""
+    g = StateGraph(PAState)
+    g.add_node("intake", intake_node)
+    g.add_node("evidence_gatherer", evidence_gatherer_node)
+    g.set_entry_point("intake")
+    g.add_conditional_edges(
+        "intake",
+        lambda s: END if s.get("error") else "evidence_gatherer",
+        {"evidence_gatherer": "evidence_gatherer", END: END},
+    )
+    g.add_edge("evidence_gatherer", END)
+    return g.compile()
 
 DATASETS_DIR = REPO_ROOT / "evals/datasets"
 RESULTS_DIR = REPO_ROOT / "evals/results"
@@ -325,7 +344,7 @@ def main() -> None:
 
     manifest_by_path = _load_manifest()
     golden_cases = _load_golden_cases()
-    graph = build_graph()
+    graph = _build_evidence_graph()
 
     print(f"Running {len(golden_cases)} cases ...\n")
     results: list[CaseResult] = []
