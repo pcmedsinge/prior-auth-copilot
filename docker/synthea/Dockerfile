@@ -1,14 +1,13 @@
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 # Synthea rolling release JAR published by MITRE/HL7.
 # To pin to a specific tagged release replace the URL with:
 #   https://github.com/synthetichealth/synthea/releases/download/vX.Y.Z/synthea-with-dependencies.jar
 ARG SYNTHEA_JAR_URL=https://github.com/synthetichealth/synthea/releases/download/master-branch-latest/synthea-with-dependencies.jar
 
-RUN apk add --no-cache curl \
-    && mkdir -p /synthea \
-    && curl -fSL "${SYNTHEA_JAR_URL}" -o /synthea/synthea.jar \
-    && apk del curl
+# eclipse-temurin:17-jre (Debian-based) has curl pre-installed — no apt install needed.
+RUN mkdir -p /synthea \
+    && curl -fSL "${SYNTHEA_JAR_URL}" -o /synthea/synthea.jar
 
 WORKDIR /synthea
 
