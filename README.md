@@ -3,7 +3,7 @@
 > **Open-source, agentic, FHIR-native Prior Authorization co-pilot — built for the CMS-0057 January 2027 mandate.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: Phase 4.2 — Evidence retrieval](https://img.shields.io/badge/status-Phase%204.2%20%C2%B7%20Evidence%20Retrieval-orange.svg)](docs/phases/)
+[![Status: Phase 4.2 — Shipped](https://img.shields.io/badge/status-Phase%204.2%20%C2%B7%20Shipped-brightgreen.svg)](docs/phases/)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-red.svg)](https://hl7.org/fhir/R4/)
 [![Da Vinci PAS](https://img.shields.io/badge/Da%20Vinci-PAS%20%C2%B7%20CRD%20%C2%B7%20DTR-purple.svg)](https://hl7.org/fhir/us/davinci-pas/)
 
@@ -83,8 +83,8 @@ Built in weekly slices. Each slice ships a runnable demo and a LinkedIn write-up
 | Sub-phase | Focus | Status |
 |---|---|---|
 | [4.1](docs/phases/4.1-problem-framing.md) | Problem framing, repo, architecture, LEADERSHIP.md, ADR-0001 | ✅ Done |
-| [4.2](docs/phases/4.2-evidence-retrieval.md) | Synthea data + FHIR MCP evidence retrieval | 🔄 In progress |
-| [4.3](docs/phases/4.3-medical-necessity-reasoner.md) | Medical necessity reasoner + RAG over NCDs/LCDs | ⏳ |
+| [4.2](docs/phases/4.2-evidence-retrieval.md) | Synthea data + FHIR MCP evidence retrieval | ✅ Shipped |
+| [4.3](docs/phases/4.3-medical-necessity-reasoner.md) | Medical necessity reasoner + RAG over NCDs/LCDs | ⏳ Next |
 | [4.4](docs/phases/4.4-pas-bundle-reviewer.md) | Da Vinci PAS bundle builder + reviewer agent | ⏳ |
 | [4.5](docs/phases/4.5-evals-release.md) | Evals harness, outcome metrics, v1.0 release | ⏳ |
 
@@ -179,8 +179,13 @@ make smoke-tools
 # 6. Run unit tests (no live HAPI or OpenAI needed)
 make test
 
-# 7. Run the end-to-end evidence demo for one patient
+# 7. Run the end-to-end evidence demo
+#    Get a patient ID from the manifest:
+#      python -c "import json; m=json.load(open('data/synthea-config/manifest.json')); print(m['patients'][0]['patient_id'])"
 make demo-evidence PATIENT=<patient_id_from_manifest>
+
+# 8. Run the eval harness against all 20 golden cases
+make evals-4.2
 ```
 
 Full pipeline runs from a clean checkout in **< 10 minutes** on Docker Desktop.
