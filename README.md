@@ -3,7 +3,7 @@
 > **Open-source, agentic, FHIR-native Prior Authorization co-pilot — built for the CMS-0057 January 2027 mandate.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: Phase 4.2 — Shipped](https://img.shields.io/badge/status-Phase%204.2%20%C2%B7%20Shipped-brightgreen.svg)](docs/phases/)
+[![Status: Phase 4.3 — Reasoner](https://img.shields.io/badge/status-Phase%204.3%20%C2%B7%20Reasoner-orange.svg)](docs/phases/)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-red.svg)](https://hl7.org/fhir/R4/)
 [![Da Vinci PAS](https://img.shields.io/badge/Da%20Vinci-PAS%20%C2%B7%20CRD%20%C2%B7%20DTR-purple.svg)](https://hl7.org/fhir/us/davinci-pas/)
 
@@ -84,7 +84,7 @@ Built in weekly slices. Each slice ships a runnable demo and a LinkedIn write-up
 |---|---|---|
 | [4.1](docs/phases/4.1-problem-framing.md) | Problem framing, repo, architecture, LEADERSHIP.md, ADR-0001 | ✅ Done |
 | [4.2](docs/phases/4.2-evidence-retrieval.md) | Synthea data + FHIR MCP evidence retrieval | ✅ Shipped |
-| [4.3](docs/phases/4.3-medical-necessity-reasoner.md) | Medical necessity reasoner + RAG over NCDs/LCDs | ⏳ Next |
+| [4.3](docs/phases/4.3-medical-necessity-reasoner.md) | Medical necessity reasoner + RAG over NCDs/LCDs | 🔄 In progress |
 | [4.4](docs/phases/4.4-pas-bundle-reviewer.md) | Da Vinci PAS bundle builder + reviewer agent | ⏳ |
 | [4.5](docs/phases/4.5-evals-release.md) | Evals harness, outcome metrics, v1.0 release | ⏳ |
 

@@ -71,6 +71,11 @@ demo-evidence: ## Run the evidence-retrieval demo for a given patient
 	@test -n "$(PATIENT)" || (echo "Usage: make demo-evidence PATIENT=<id>" && exit 1)
 	python scripts/demo_evidence.py $(PATIENT)
 
+.PHONY: demo-reason
+demo-reason: ## Run the full pipeline demo (evidence + reasoning) for a given patient
+	@test -n "$(PATIENT)" || (echo "Usage: make demo-reason PATIENT=<id>" && exit 1)
+	python scripts/demo_reason.py $(PATIENT)
+
 # ── Tests ───────────────────────────────────────────────────────
 
 .PHONY: test
@@ -90,6 +95,20 @@ evals-4.2-no-llm: ## Run Phase 4.2 evals without LLM second pass (faster, determ
 .PHONY: evals-4.2-ci
 evals-4.2-ci: ## Run Phase 4.2 evals in CI mode (exits 1 if any target missed)
 	python evals/runners/run_4_2.py --ci
+
+.PHONY: evals-4.3
+evals-4.3: ## Run Phase 4.3 Reasoner eval harness (requires fhir-up + load-synthea + ingest-policies + OPENAI_API_KEY)
+	python evals/runners/run_4_3.py
+
+.PHONY: evals-4.3-ci
+evals-4.3-ci: ## Run Phase 4.3 evals in CI mode
+	python evals/runners/run_4_3.py --ci
+
+# ── Policy corpus ─────────────────────────────────────────────────────────────
+
+.PHONY: ingest-policies
+ingest-policies: ## Embed policy corpus into LanceDB (requires OPENAI_API_KEY)
+	python scripts/ingest_policies.py
 
 # ── Help ──────────────────────────────────────────────────────────────────────
 

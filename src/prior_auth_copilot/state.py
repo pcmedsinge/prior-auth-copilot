@@ -4,12 +4,14 @@ src/prior_auth_copilot/state.py
 LangGraph graph state + Pydantic domain models for the Prior-Auth Co-pilot.
 
 Architecture (per ADR-0003):
-  - PAState         TypedDict  — graph state container (LangGraph-native)
-  - EvidenceItem    Pydantic   — one retrieved FHIR resource with PA tags
-  - EvidencePackage Pydantic   — full output of the Evidence Gatherer node
-  - ServiceRequest  Pydantic   — the proposed clinical service (MRI, GLP-1, etc.)
-  - ToolCall        Pydantic   — audit log of each MCP tool invocation
-  - ChecklistResult Pydantic   — deterministic PA checklist outcome
+  - PAState           TypedDict  — graph state container (LangGraph-native)
+  - EvidenceItem      Pydantic   — one retrieved FHIR resource with PA tags
+  - EvidencePackage   Pydantic   — full output of the Evidence Gatherer node
+  - ServiceRequest    Pydantic   — the proposed clinical service (MRI, GLP-1, etc.)
+  - ToolCall          Pydantic   — audit log of each MCP tool invocation
+  - ChecklistResult   Pydantic   — deterministic PA checklist outcome
+  - CriterionResult   Pydantic   — Reasoner verdict on one policy criterion (Phase 4.3)
+  - Decision          Pydantic   — full Reasoner output (Phase 4.3)
 
 Rule: never add raw dict fields to PAState — wrap in a Pydantic model first.
 """
@@ -120,6 +122,67 @@ class EvidencePackage(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Phase 4.3 — Reasoner Pydantic models
+# ---------------------------------------------------------------------------
+
+
+class CriterionResult(BaseModel):
+    """
+    Reasoner verdict on one policy criterion.
+
+    criterion    — human-readable criterion name (from the policy section)
+    status       — "met" | "not_met" | "unclear"
+    evidence_refs— FHIR resource refs that support the verdict
+    citation     — SHA-256 hash of the policy paragraph cited (verified by citation checker)
+    citation_text— snippet of the cited policy paragraph (for display only)
+    explanation  — one-sentence explanation of the verdict
+    """
+
+    criterion: str
+    status: str = Field(pattern="^(met|not_met|unclear)$")
+    evidence_refs: list[str] = Field(default_factory=list)
+    citation: str = Field(
+        default="",
+        description="SHA-256 hash of the cited policy chunk. Empty if status=unclear.",
+    )
+    citation_text: str = Field(default="", description="Display-only policy snippet.")
+    explanation: str = ""
+
+
+class Decision(BaseModel):
+    """
+    Structured output of the Medical Necessity Reasoner node.
+    Consumed by the PAS Bundle Builder (Phase 4.4).
+    """
+
+    patient_id: str
+    service: ServiceRequest
+    overall_recommendation: str = Field(
+        pattern="^(approve|deny|needs_review)$",
+        description="Overall PA recommendation based on all criterion verdicts.",
+    )
+    criteria: list[CriterionResult] = Field(default_factory=list)
+    summary: str = Field(
+        default="",
+        description="One-paragraph plain-English necessity argument for the UM nurse.",
+    )
+    reasoner_model: str = ""
+    citation_check_passed: bool = False
+    grounding_issues: list[str] = Field(
+        default_factory=list,
+        description="List of citation hashes that failed the grounding check.",
+    )
+
+    @property
+    def met_count(self) -> int:
+        return sum(1 for c in self.criteria if c.status == "met")
+
+    @property
+    def not_met_count(self) -> int:
+        return sum(1 for c in self.criteria if c.status == "not_met")
+
+
+# ---------------------------------------------------------------------------
 # PAState — LangGraph graph state container (TypedDict)
 # ---------------------------------------------------------------------------
 # Rules (per ADR-0003):
@@ -134,7 +197,8 @@ class PAState(TypedDict, total=False):
 
     Populated progressively:
       patient_id, service    — set by Intake
-      evidence_package       — set by Evidence Gatherer
+      evidence_package       — set by Evidence Gatherer (Phase 4.2)
+      decision               — set by Medical Necessity Reasoner (Phase 4.3)
       tool_calls             — accumulated by any node that calls a tool
       error                  — set by any node on failure; checked by conditional edges
     """
@@ -144,6 +208,9 @@ class PAState(TypedDict, total=False):
 
     # Evidence Gatherer output (Phase 4.2)
     evidence_package: EvidencePackage | None
+
+    # Reasoner output (Phase 4.3)
+    decision: Decision | None
 
     # Accumulated tool-call audit log (all nodes append here)
     tool_calls: Annotated[list[ToolCall], operator.add]
