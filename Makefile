@@ -71,6 +71,12 @@ demo-evidence: ## Run the evidence-retrieval demo for a given patient
 	@test -n "$(PATIENT)" || (echo "Usage: make demo-evidence PATIENT=<id>" && exit 1)
 	python scripts/demo_evidence.py $(PATIENT)
 
+# ── Tests ───────────────────────────────────────────────────────
+
+.PHONY: test
+test: ## Run unit tests (no live HAPI or OpenAI required)
+	pytest tests/ -v
+
 # ── Help ──────────────────────────────────────────────────────────────────────
 
 .PHONY: help

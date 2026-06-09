@@ -117,8 +117,8 @@ prior-auth-copilot/
 ├── README.md                          ← you are here
 ├── LEADERSHIP.md                      ← how I'd lead a squad shipping this
 ├── LICENSE                            ← Apache-2.0
-├── Makefile                           ← fhir-up, load-synthea, smoke, smoke-tools, mcp-up
-├── pyproject.toml                     ← Python dependencies (mcp-fhir, requests, httpx)
+├── Makefile                           ← fhir-up, load-synthea, smoke, smoke-tools, mcp-up, test, demo-evidence
+├── pyproject.toml                     ← Python deps (langgraph, langchain-openai, mcp-fhir, pydantic)
 ├── docker-compose.yml                 ← HAPI FHIR + Synthea + mcp-fhir services
 ├── docker/
 │   ├── hapi/                          ← HAPI config, IG fetch scripts
@@ -131,12 +131,20 @@ prior-auth-copilot/
 │       └── manifest.json             ← curated 50-patient set (generated)
 ├── src/
 │   └── prior_auth_copilot/
+│       ├── state.py                  ← PAState TypedDict + Pydantic models (ADR-0003)
+│       ├── graph.py                  ← LangGraph StateGraph (Intake → Evidence Gatherer)
+│       ├── nodes/
+│       │   ├── intake.py             ← Intake stub node
+│       │   └── evidence_gatherer.py  ← 6 tools + PA checklist + LLM summaries
 │       └── evidence/
-│           └── tools.py              ← 6 evidence-retrieval tools (find_observations etc.)
+│           └── tools.py              ← find_observations, find_conditions, etc.
 ├── scripts/
 │   ├── load_synthea.py               ← generate → curate → load pipeline
 │   ├── smoke_fhir.py                 ← post-load HAPI verification
-│   └── smoke_mcp_tools.py           ← verify all 6 evidence tools callable
+│   ├── smoke_mcp_tools.py           ← verify all 6 evidence tools callable
+│   └── demo_evidence.py             ← end-to-end evidence demo for one patient
+├── tests/
+│   └── test_checklist_tagger.py     ← unit tests for PA checklist (no live deps)
 ├── docs/
 │   ├── WORKFLOW.md                   ← how this project is run (read first)
 │   ├── mcp-tools.md                  ← evidence tool signatures + examples
@@ -148,9 +156,9 @@ prior-auth-copilot/
 
 ---
 
-## Quick start (Phase 4.2 — Synthea pipeline)
+## Quick start (Phase 4.2 — Synthea pipeline + Evidence Gatherer)
 
-**Prerequisites**: Docker Desktop running, Git Bash or WSL2 (Windows), Python 3.12+.
+**Prerequisites**: Docker Desktop running, Git Bash or WSL2 (Windows), Python 3.12+, `OPENAI_API_KEY` set.
 
 ```bash
 # 1. Fetch IG tarballs (once per checkout)
@@ -162,11 +170,17 @@ make fhir-up
 # 3. Build the Synthea image, generate ~200 patients, curate 50, load into HAPI
 make load-synthea
 
-# 4. Verify — should print "SMOKE TEST PASSED"
+# 4. Verify HAPI — should print "SMOKE TEST PASSED"
 make smoke
 
-# 5. Check patient count
-curl 'http://localhost:8082/fhir/Patient?_summary=count'
+# 5. Verify all 6 evidence tools callable
+make smoke-tools
+
+# 6. Run unit tests (no live HAPI or OpenAI needed)
+make test
+
+# 7. Run the end-to-end evidence demo for one patient
+make demo-evidence PATIENT=<patient_id_from_manifest>
 ```
 
 Full pipeline runs from a clean checkout in **< 10 minutes** on Docker Desktop.
