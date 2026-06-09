@@ -48,6 +48,27 @@ services:
     environment:
       FHIR_BASE_URL: "http://fhir:8080/fhir"   # inside compose network HAPI is on :8080
       HAPI_VALIDATOR_URL: "http://localhost:8083"
+
+  payer-fhir:
+    # Mock payer PAS $submit endpoint (ADR-0009).
+    # Separate HAPI instance with Da Vinci PAS profile loaded for $validate.
+    image: hapiproject/hapi:v7.4.0
+    container_name: prior-auth-payer-fhir
+    ports:
+      - "8090:8080"
+    volumes:
+      - payer-hapi-data:/data/hapi
+      - ./docker/payer-hapi/igs:/igs:ro
+      - ./docker/payer-hapi/application.yaml:/data/hapi/application.yaml:ro
+    environment:
+      SPRING_CONFIG_LOCATION: /data/hapi/application.yaml
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/fhir/metadata > /dev/null || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
       MCP_TRANSPORT: "sse"
       MCP_PORT: "8000"
       LOG_FORMAT: "console"
@@ -59,3 +80,5 @@ services:
 volumes:
   hapi-data:
     name: prior-auth-hapi-data
+  payer-hapi-data:
+    name: prior-auth-payer-hapi-data

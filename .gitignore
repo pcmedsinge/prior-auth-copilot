@@ -48,6 +48,9 @@ evals/results/*.json
 # LanceDB policy vector store (rebuilt by `make ingest-policies`)
 data/policy-store/
 
+# LangGraph checkpoint SQLite database (rebuilt per run)
+data/checkpoints/
+
 # HAPI IG tarballs (fetched by docker/hapi/fetch_igs.sh — not committed)
 docker/hapi/igs/*.tgz
 docker/hapi/igs/*.tar.gz

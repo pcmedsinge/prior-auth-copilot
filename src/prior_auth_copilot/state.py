@@ -12,6 +12,9 @@ Architecture (per ADR-0003):
   - ChecklistResult   Pydantic   — deterministic PA checklist outcome
   - CriterionResult   Pydantic   — Reasoner verdict on one policy criterion (Phase 4.3)
   - Decision          Pydantic   — full Reasoner output (Phase 4.3)
+  - BundleEnvelope    Pydantic   — assembled Da Vinci PAS Bundle + validation status (Phase 4.4)
+  - ReviewerAction    Pydantic   — HITL reviewer decision (Phase 4.4)
+  - SubmitResult      Pydantic   — payer ClaimResponse (Phase 4.4)
 
 Rule: never add raw dict fields to PAState — wrap in a Pydantic model first.
 """
@@ -183,6 +186,58 @@ class Decision(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Phase 4.4 — Bundle Builder + Reviewer + Submit Pydantic models
+# ---------------------------------------------------------------------------
+
+
+class BundleEnvelope(BaseModel):
+    """
+    The assembled Da Vinci PAS FHIR Bundle + validation metadata.
+    Output of the PAS Bundle Builder node.
+    """
+
+    bundle: dict[str, Any] = Field(description="Raw FHIR Bundle (type=collection) dict.")
+    bundle_id: str = Field(description="Bundle.id — stable, derived from patient_id + run timestamp.")
+    validation_passed: bool = False
+    validation_issues: list[str] = Field(default_factory=list)
+    checkpoint_id: str = Field(default="", description="LangGraph checkpoint ID stored in Provenance.")
+    provenance_ref: str = Field(default="", description="Provenance/<id> ref within the Bundle.")
+
+
+class ReviewerAction(BaseModel):
+    """
+    HITL reviewer decision — set by the human via the CLI (ADR-0007).
+    Passed back to the graph via LangGraph Command(resume=...).
+    """
+
+    action: str = Field(
+        pattern="^(approve|edit|send_back)$",
+        description="Reviewer choice: approve → submit | edit → re-validate | send_back → replay Reasoner",
+    )
+    justification_override: str = Field(
+        default="",
+        description="Edited justification text (only used when action=edit).",
+    )
+    feedback: str = Field(
+        default="",
+        description="Structured feedback for the Reasoner (only used when action=send_back).",
+    )
+    reviewer_id: str = Field(default="human-reviewer")
+
+
+class SubmitResult(BaseModel):
+    """Payer ClaimResponse returned by the mock $submit endpoint."""
+
+    claim_response: dict[str, Any] = Field(description="Raw FHIR ClaimResponse dict.")
+    outcome: str = Field(
+        pattern="^(queued|complete|error|partial)$",
+        description="FHIR ClaimResponse.outcome.",
+    )
+    disposition: str = Field(default="", description="Human-readable disposition text.")
+    payer_reference: str = Field(default="", description="Payer-assigned PA reference number.")
+
+
+# ---------------------------------------------------------------------------
 # PAState — LangGraph graph state container (TypedDict)
 # ---------------------------------------------------------------------------
 # Rules (per ADR-0003):
@@ -211,6 +266,15 @@ class PAState(TypedDict, total=False):
 
     # Reasoner output (Phase 4.3)
     decision: Decision | None
+
+    # Bundle Builder output (Phase 4.4)
+    bundle_envelope: BundleEnvelope | None
+
+    # Reviewer HITL action (Phase 4.4) — set by interrupt resume
+    reviewer_action: ReviewerAction | None
+
+    # Submit result (Phase 4.4)
+    submit_result: SubmitResult | None
 
     # Accumulated tool-call audit log (all nodes append here)
     tool_calls: Annotated[list[ToolCall], operator.add]

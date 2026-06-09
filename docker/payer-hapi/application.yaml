@@ -1,0 +1,36 @@
+spring:
+  datasource:
+    url: 'jdbc:h2:file:/data/hapi/h2;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1'
+    username: sa
+    password: ''
+    driverClassName: org.h2.Driver
+  jpa:
+    properties:
+      hibernate.dialect: ca.uhn.fhir.jpa.model.dialect.HapiFhirH2Dialect
+
+hapi:
+  fhir:
+    fhir_version: R4
+    server_address: http://localhost:8090/fhir
+    allow_contains_searches: true
+    allow_multiple_delete: true
+    expunge_enabled: true
+
+    # Validation — STRICT on writes (Phase 4.4 conformance gate).
+    # Bundles that fail davinci-pas validation are rejected here.
+    validation:
+      requests_enabled: true
+      responses_enabled: false
+
+    # Da Vinci PAS + US Core IGs (same tarballs as docker/hapi/igs/).
+    implementationGuides:
+      hl7_fhir_us_core:
+        name: hl7.fhir.us.core
+        version: 6.1.0
+        reloadExisting: false
+        installMode: STORE_AND_INSTALL
+      hl7_fhir_us_davinci_pas:
+        name: hl7.fhir.us.davinci-pas
+        version: 2.0.1
+        reloadExisting: false
+        installMode: STORE_AND_INSTALL

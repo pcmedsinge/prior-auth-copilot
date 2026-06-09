@@ -30,7 +30,23 @@ fhir-logs: ## Tail HAPI container logs
 .PHONY: fhir-reset
 fhir-reset: ## ⚠ Stop HAPI and WIPE the H2 data volume (full reset)
 	docker compose down -v
-	@echo "Volume prior-auth-hapi-data removed."
+	@echo "Volumes prior-auth-hapi-data and prior-auth-payer-hapi-data removed."
+
+# ── Payer mock FHIR server (Phase 4.4) ────────────────────────────────────────
+
+.PHONY: payer-fhir-up
+payer-fhir-up: ## Start mock payer HAPI server on port 8090 (waits until healthy)
+	docker compose up -d payer-fhir
+	@echo "Waiting for payer HAPI to be ready..."
+	@until curl -sf http://localhost:8090/fhir/metadata > /dev/null 2>&1; do \
+		printf '.'; sleep 5; \
+	done
+	@echo ""
+	@echo "Payer HAPI ready at http://localhost:8090/fhir"
+
+.PHONY: payer-fhir-down
+payer-fhir-down: ## Stop the payer HAPI container
+	docker compose stop payer-fhir
 
 # ── MCP server (SSE mode — for MCP Inspector / Phase 4.5+) ───────────────
 
@@ -76,6 +92,15 @@ demo-reason: ## Run the full pipeline demo (evidence + reasoning) for a given pa
 	@test -n "$(PATIENT)" || (echo "Usage: make demo-reason PATIENT=<id>" && exit 1)
 	python scripts/demo_reason.py $(PATIENT)
 
+.PHONY: demo-e2e
+demo-e2e: ## Run the full end-to-end demo including HITL reviewer (requires all services)
+	@test -n "$(PATIENT)" || (echo "Usage: make demo-e2e PATIENT=<id>" && exit 1)
+	python scripts/demo_e2e.py $(PATIENT)
+
+.PHONY: mock-payer-up
+mock-payer-up: ## Start the FastAPI mock payer server in the background (port MOCK_PAYER_PORT)
+	python scripts/mock_payer.py &
+
 # ── Tests ───────────────────────────────────────────────────────
 
 .PHONY: test
@@ -103,6 +128,10 @@ evals-4.3: ## Run Phase 4.3 Reasoner eval harness (requires fhir-up + load-synth
 .PHONY: evals-4.3-ci
 evals-4.3-ci: ## Run Phase 4.3 evals in CI mode
 	python evals/runners/run_4_3.py --ci
+
+.PHONY: evals-4.4
+evals-4.4: ## Run Phase 4.4 Bundle Builder eval harness
+	python evals/runners/run_4_4.py
 
 # ── Policy corpus ─────────────────────────────────────────────────────────────
 

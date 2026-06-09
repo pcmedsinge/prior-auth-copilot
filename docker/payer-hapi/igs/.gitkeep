@@ -1,0 +1,4 @@
+# IG tarballs go here — same files as docker/hapi/igs/.
+# Run docker/hapi/fetch_igs.sh (or fetch_igs.ps1) and copy the tarballs here,
+# OR symlink: ln -s ../hapi/igs/hl7*.tgz ./
+# See docker/hapi/README.md for instructions.
