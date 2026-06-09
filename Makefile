@@ -77,6 +77,20 @@ demo-evidence: ## Run the evidence-retrieval demo for a given patient
 test: ## Run unit tests (no live HAPI or OpenAI required)
 	pytest tests/ -v
 
+# ── Evals ─────────────────────────────────────────────────────
+
+.PHONY: evals-4.2
+evals-4.2: ## Run Phase 4.2 eval harness (requires fhir-up + load-synthea + OPENAI_API_KEY)
+	python evals/runners/run_4_2.py
+
+.PHONY: evals-4.2-no-llm
+evals-4.2-no-llm: ## Run Phase 4.2 evals without LLM second pass (faster, deterministic only)
+	python evals/runners/run_4_2.py --no-llm
+
+.PHONY: evals-4.2-ci
+evals-4.2-ci: ## Run Phase 4.2 evals in CI mode (exits 1 if any target missed)
+	python evals/runners/run_4_2.py --ci
+
 # ── Help ──────────────────────────────────────────────────────────────────────
 
 .PHONY: help

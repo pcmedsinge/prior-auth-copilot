@@ -42,6 +42,9 @@ models/
 # Synthea generated output (re-created by `make load-synthea`)
 out/
 
+# Eval runner JSON outputs (contain patient IDs — regenerate locally)
+evals/results/*.json
+
 # HAPI IG tarballs (fetched by docker/hapi/fetch_igs.sh — not committed)
 docker/hapi/igs/*.tgz
 docker/hapi/igs/*.tar.gz
