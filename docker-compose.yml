@@ -9,10 +9,6 @@ services:
       - ./docker/hapi/application.yaml:/data/hapi/application.yaml:ro
     environment:
       SPRING_CONFIG_LOCATION: /data/hapi/application.yaml
-      # Override H2 path to /tmp — avoids AccessDeniedException on Windows Docker Desktop
-      # (nonroot container user can't write to named volumes on Windows)
-      # Data is reloaded via `make load-synthea` on each fresh start.
-      SPRING_DATASOURCE_URL: "jdbc:h2:file:/tmp/hapi/h2;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1"
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8080/fhir/metadata > /dev/null || exit 1"]
       interval: 15s
