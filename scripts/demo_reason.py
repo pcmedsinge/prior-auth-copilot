@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-demo_reason.py — run the full pipeline (Evidence Gatherer + Reasoner) for one patient.
+demo_reason.py â€” run the full pipeline (Evidence Gatherer + Reasoner) for one patient.
 
 Usage:
     python scripts/demo_reason.py <patient_id>
@@ -31,12 +31,12 @@ sys.path.insert(0, str(REPO_ROOT / "src"))
 from prior_auth_copilot.graph import graph  # noqa: E402
 from prior_auth_copilot.state import ServiceRequest  # noqa: E402
 
-ICONS = {"approve": "✅", "deny": "❌", "needs_review": "⚠️"}
-STATUS_ICONS = {"met": "✓", "not_met": "✗", "unclear": "?"}
+ICONS = {"approve": "âœ…", "deny": "âŒ", "needs_review": "âš ï¸"}
+STATUS_ICONS = {"met": "âœ“", "not_met": "âœ—", "unclear": "?"}
 
 
 def _section(title: str) -> None:
-    print(f"\n{'─' * 62}\n  {title}\n{'─' * 62}")
+    print(f"\n{'â”€' * 62}\n  {title}\n{'â”€' * 62}")
 
 
 def main() -> None:
@@ -47,7 +47,7 @@ def main() -> None:
 
     patient_id = sys.argv[1].strip()
 
-    print(f"\nPrior-Auth Co-pilot — Full Pipeline Demo (Phase 4.3)")
+    print(f"\nPrior-Auth Co-pilot â€” Full Pipeline Demo (Phase 4.3)")
     print(f"Patient  : {patient_id}")
     print(f"Service  : MRI lumbar spine (SNOMED 241615005)")
     print(f"Model    : {os.getenv('REASONER_MODEL', 'gpt-4o')}")
@@ -63,7 +63,7 @@ def main() -> None:
         "tool_calls": [],
     }
 
-    print("\nRunning graph: Intake → Evidence Gatherer → Reasoner ...")
+    print("\nRunning graph: Intake â†’ Evidence Gatherer â†’ Reasoner ...")
     result = graph.invoke(initial_state)
 
     if result.get("error"):
@@ -77,22 +77,22 @@ def main() -> None:
         print("\nERROR: evidence_package missing.")
         sys.exit(1)
     if decision is None:
-        print("\nERROR: decision missing — Reasoner may have failed.")
+        print("\nERROR: decision missing â€” Reasoner may have failed.")
         sys.exit(1)
 
-    # ── Evidence summary ───────────────────────────────────────────────────
+    # â”€â”€ Evidence summary â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _section(f"EVIDENCE CHECKLIST ({pkg.checklist.met_count}/{len(pkg.checklist.items)} met)")
     for item in pkg.checklist.items:
-        icon = "✓" if item.met else "✗"
+        icon = "âœ“" if item.met else "âœ—"
         print(f"  [{icon}] {item.criterion}")
         if not item.met and item.note:
-            print(f"       → {item.note}")
+            print(f"       â†’ {item.note}")
 
-    # ── Decision ───────────────────────────────────────────────────────────
+    # â”€â”€ Decision â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     rec_icon = ICONS.get(decision.overall_recommendation, "")
     _section(f"DECISION: {rec_icon} {decision.overall_recommendation.upper()}")
 
-    print(f"\n  Citation check : {'✅ PASSED' if decision.citation_check_passed else '❌ FAILED'}")
+    print(f"\n  Citation check : {'âœ… PASSED' if decision.citation_check_passed else 'âŒ FAILED'}")
     if decision.grounding_issues:
         print(f"  Grounding issues: {decision.grounding_issues}")
 
@@ -109,7 +109,7 @@ def main() -> None:
     _section("NECESSITY ARGUMENT (for UM nurse)")
     print(f"\n  {decision.summary}\n")
 
-    # ── Write JSON ─────────────────────────────────────────────────────────
+    # â”€â”€ Write JSON â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     out_dir = REPO_ROOT / "out"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"decision-{patient_id}.json"
@@ -125,8 +125,9 @@ def main() -> None:
             default=str,
         )
 
-    print(f"  JSON written → {out_file.relative_to(REPO_ROOT)}\n")
+    print(f"  JSON written â†’ {out_file.relative_to(REPO_ROOT)}\n")
 
 
 if __name__ == "__main__":
     main()
+

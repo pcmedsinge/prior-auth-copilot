@@ -10,16 +10,20 @@ FHIR_BASE_URL ?= http://localhost:8082/fhir
 # ── Full stack start / stop ────────────────────────────────────────────────────
 
 .PHONY: start
-start: ## ⚡ Start the full stack (HAPI x2 + patients + policies + mock payer + smoke test)
+start: ## Start the full stack (HAPI + patients + policies + mock payer + smoke test)
 	bash start.sh
 
 .PHONY: start-fast
-start-fast: ## ⚡ Fast restart — skip Synthea generation and policy ingestion
+start-fast: ## Fast restart — skip Synthea generation and policy ingestion
 	bash start.sh --no-synthea --no-policies
 
 .PHONY: stop
-stop: ## 🛑 Stop all services (HAPI containers + mock payer process)
+stop: ## Stop all services (HAPI containers + mock payer process)
 	bash stop.sh
+
+.PHONY: install
+install: ## Install Python dependencies
+	pip install -r requirements.txt 2>$$null || pip install python-dotenv requests mcp-fhir httpx langgraph langchain-openai langsmith pydantic structlog lancedb langchain-community pypdf rich fastapi uvicorn langgraph-checkpoint-sqlite
 
 # ── FHIR server ──────────────────────────────────────────────────────────────
 

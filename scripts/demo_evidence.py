@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-demo_evidence.py — run the Evidence Gatherer for a single patient.
+demo_evidence.py â€” run the Evidence Gatherer for a single patient.
 
 Usage:
     python scripts/demo_evidence.py <patient_id>
@@ -36,9 +36,9 @@ from prior_auth_copilot.state import ServiceRequest  # noqa: E402
 
 def _print_section(title: str) -> None:
     width = 60
-    print(f"\n{'─' * width}")
+    print(f"\n{'â”€' * width}")
     print(f"  {title}")
-    print(f"{'─' * width}")
+    print(f"{'â”€' * width}")
 
 
 def main() -> None:
@@ -49,12 +49,12 @@ def main() -> None:
 
     patient_id = sys.argv[1].strip()
 
-    print(f"\nPrior-Auth Co-pilot — Evidence Gatherer Demo")
+    print(f"\nPrior-Auth Co-pilot â€” Evidence Gatherer Demo")
     print(f"Patient : {patient_id}")
     print(f"Service : MRI lumbar spine (SNOMED 241615005)")
     print(f"FHIR    : {os.getenv('FHIR_BASE_URL', 'http://localhost:8082/fhir')}")
 
-    # ── Run the graph ──────────────────────────────────────────────────────
+    # â”€â”€ Run the graph â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     initial_state = {
         "patient_id": patient_id,
         "service": ServiceRequest(
@@ -65,10 +65,10 @@ def main() -> None:
         "tool_calls": [],
     }
 
-    print("\nRunning graph: Intake → Evidence Gatherer ...")
+    print("\nRunning graph: Intake â†’ Evidence Gatherer ...")
     result = graph.invoke(initial_state)
 
-    # ── Error check ────────────────────────────────────────────────────────
+    # â”€â”€ Error check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     if result.get("error"):
         print(f"\nERROR: {result['error']}")
         sys.exit(1)
@@ -78,13 +78,13 @@ def main() -> None:
         print("\nERROR: evidence_package not set in result state.")
         sys.exit(1)
 
-    # ── Print evidence package ─────────────────────────────────────────────
+    # â”€â”€ Print evidence package â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     _print_section("PA CHECKLIST")
     for item in pkg.checklist.items:
-        status = "✓" if item.met else "✗"
+        status = "âœ“" if item.met else "âœ—"
         print(f"  [{status}] {item.criterion}")
         if not item.met and item.note:
-            print(f"       → {item.note}")
+            print(f"       â†’ {item.note}")
 
     print(f"\n  Overall: {pkg.checklist.met_count}/{len(pkg.checklist.items)} criteria met")
     print(f"  {pkg.gatherer_notes}")
@@ -107,7 +107,7 @@ def main() -> None:
         status = f"error: {tc.error}" if tc.error else f"{tc.result_count} result(s)"
         print(f"  {tc.tool_name:<30} {status}")
 
-    # ── Write JSON output ──────────────────────────────────────────────────
+    # â”€â”€ Write JSON output â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     out_dir = REPO_ROOT / "out"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_file = out_dir / f"evidence-{patient_id}.json"
@@ -115,9 +115,10 @@ def main() -> None:
     with open(out_file, "w", encoding="utf-8") as fh:
         json.dump(pkg.model_dump(), fh, indent=2, default=str)
 
-    print(f"\n  JSON written → {out_file.relative_to(REPO_ROOT)}")
+    print(f"\n  JSON written â†’ {out_file.relative_to(REPO_ROOT)}")
     print("\nDone.\n")
 
 
 if __name__ == "__main__":
     main()
+

@@ -400,6 +400,9 @@ _PURGEABLE_TYPES = [
     "Condition",
     "Encounter",
     "Patient",
+    "Practitioner",
+    "Organization",
+    "Location",
 ]
 
 
@@ -458,29 +461,105 @@ def _purge_tagged_resources(session: requests.Session) -> None:
 
 def _post_bundle(session: requests.Session, bundle: dict, label: str) -> bool:
     """
-    Load a FHIR bundle by POSTing each resource individually.
+    Load a Synthea FHIR bundle into HAPI using PUT with Synthea resource IDs.
 
-    Synthea transaction bundles use conditional match URLs in both request fields
-    AND inline references (e.g. Encounter.participant.individual.reference =
-    "Practitioner?identifier=..."). HAPI tries to resolve these as live queries
-    which fails for new resources. Posting resources one-by-one skips all
-    cross-bundle reference resolution entirely.
+    Synthea uses urn:uuid: as fullUrl and as cross-resource references.
+    We build a map from urn:uuid:X -> ResourceType/X using the bundle's own
+    fullUrl entries, then rewrite all .reference fields before PUTting each
+    resource. HAPI accepts PUT /{Type}/{id} and stores the resource with
+    the Synthea UUID as its logical ID.
+
+    Load order ensures referenced resources exist before referencing ones.
     """
-    _KEEP_TYPES = {
-        "Patient", "Condition", "Procedure", "MedicationRequest",
-        "Observation", "ImagingStudy", "DocumentReference",
-        "Encounter", "Practitioner", "Organization", "Location",
-    }
+    _ORDER = [
+        "Practitioner", "Organization", "Location",
+        "Patient",
+        "Encounter",  # must come before Condition/Procedure/Observation which reference it
+        "Condition", "Procedure", "MedicationRequest",
+        "Observation", "ImagingStudy",
+    ]
 
+    # Build urn -> ResourceType/id map from bundle fullUrls
+    urn_to_ref: dict[str, str] = {}
+    for entry in bundle.get("entry", []):
+        full_url = entry.get("fullUrl", "")
+        resource = entry.get("resource", {})
+        rtype = resource.get("resourceType", "")
+        rid = resource.get("id", "")
+        if full_url.startswith("urn:uuid:") and rtype and rid:
+            urn_to_ref[full_url] = f"{rtype}/{rid}"
+
+    # Also build a map of conditional refs like "Practitioner?identifier=..."
+    # -> first matching Practitioner id in this bundle
+    pract_by_npi: dict[str, str] = {}
+    org_by_npi: dict[str, str] = {}
     for entry in bundle.get("entry", []):
         resource = entry.get("resource", {})
         rtype = resource.get("resourceType", "")
-        if rtype not in _KEEP_TYPES:
+        rid = resource.get("id", "")
+        if not rid:
             continue
-        url = f"{FHIR_BASE_URL}/{rtype}"
-        resp = session.post(url, json=resource, headers=_FHIR_HEADERS, timeout=30)
-        if resp.status_code not in (200, 201):
-            _log(f"  WARN: {rtype} POST failed {resp.status_code} â€” skipping")
+        for ident in resource.get("identifier", []):
+            val = ident.get("value", "")
+            if rtype == "Practitioner" and val:
+                pract_by_npi[val] = f"Practitioner/{rid}"
+            elif rtype == "Organization" and val:
+                org_by_npi[val] = f"Organization/{rid}"
+
+    def _resolve_conditional(ref: str) -> str:
+        """Resolve Synthea conditional references like 'Practitioner?identifier=sys|val'."""
+        if "?identifier=" in ref:
+            val = ref.split("|")[-1]  # get the NPI value after the |
+            rtype_prefix = ref.split("?")[0]
+            if rtype_prefix == "Practitioner" and val in pract_by_npi:
+                return pract_by_npi[val]
+            if rtype_prefix == "Organization" and val in org_by_npi:
+                return org_by_npi[val]
+            return ""  # drop unresolvable conditional refs
+        return ref
+
+    def _rewrite(obj: Any) -> Any:
+        """Replace all urn:uuid: and conditional references with ResourceType/id."""
+        if isinstance(obj, dict):
+            out = {}
+            for k, v in obj.items():
+                if k == "reference" and isinstance(v, str):
+                    if v.startswith("urn:uuid:"):
+                        out[k] = urn_to_ref.get(v, v)
+                    elif "?" in v:
+                        resolved = _resolve_conditional(v)
+                        if resolved:  # only include if resolvable
+                            out[k] = resolved
+                        # else: skip this reference entirely
+                    else:
+                        out[k] = v
+                else:
+                    out[k] = _rewrite(v)
+            return out
+        if isinstance(obj, list):
+            return [_rewrite(i) for i in obj]
+        return obj
+
+    resources_by_type: dict[str, list] = {}
+    for entry in bundle.get("entry", []):
+        resource = entry.get("resource", {})
+        rtype = resource.get("resourceType", "")
+        rid = resource.get("id", "")
+        if rtype in _ORDER and rid:
+            resources_by_type.setdefault(rtype, []).append(resource)
+
+    for rtype in _ORDER:
+        for resource in resources_by_type.get(rtype, []):
+            rid = resource["id"]
+            rewritten = _rewrite(copy.deepcopy(resource))
+            resp = session.put(
+                f"{FHIR_BASE_URL}/{rtype}/{rid}",
+                json=rewritten,
+                headers=_FHIR_HEADERS,
+                timeout=30,
+            )
+            if resp.status_code not in (200, 201):
+                _log(f"  WARN: {rtype}/{rid} PUT failed {resp.status_code} - skipping")
 
     return True
 
@@ -587,4 +666,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
 

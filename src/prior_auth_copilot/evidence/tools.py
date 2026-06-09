@@ -1,17 +1,13 @@
-"""
+﻿"""
 src/prior_auth_copilot/evidence/tools.py
 
 Six evidence-retrieval tools for MRI lumbar spine Prior Authorization.
 
-Each function wraps mcp-fhir's `fhir_search` with PA-specific parameter
-defaults and returns a normalised list of FHIR resource dicts (the raw
-`entry[].resource` objects from the Bundle).
+Each function calls the HAPI FHIR server directly via httpx (no mcp_fhir
+dependency â€” mcp-fhir is not installable on Python 3.14).  The interface is
+identical: each function returns a list of raw FHIR resource dicts.
 
-These functions are called directly by the LangGraph Evidence Gatherer node
-(Issue #5).  They are also exposed as MCP tools via the mcp-fhir stdio server
-for MCP-protocol clients (Phase 4.5+).
-
-All functions are async — call with `await` or via `asyncio.run()`.
+All functions are async â€” call with `await` or via `asyncio.run()`.
 """
 
 from __future__ import annotations
@@ -19,17 +15,29 @@ from __future__ import annotations
 import os
 from typing import Any
 
+import httpx
 from dotenv import load_dotenv
 
-# Bootstrap .env so FHIR_BASE_URL etc. are set before mcp-fhir's settings load.
 load_dotenv(override=False)
 
-# mcp-fhir's fhir_search reads settings from env at import time.
-from mcp_fhir.tools.fhir_search import fhir_search  # noqa: E402
+FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "http://localhost:8082/fhir").rstrip("/")
+_HEADERS = {"Accept": "application/fhir+json"}
 
 # ---------------------------------------------------------------------------
 # Shared helpers
 # ---------------------------------------------------------------------------
+
+
+async def _fhir_search(resource_type: str, params: dict[str, str]) -> dict[str, Any]:
+    """GET {FHIR_BASE_URL}/{resource_type}?<params> and return the Bundle."""
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.get(
+            f"{FHIR_BASE_URL}/{resource_type}",
+            params=params,
+            headers=_HEADERS,
+        )
+        resp.raise_for_status()
+        return resp.json()
 
 
 def _resources_from_bundle(bundle: dict[str, Any]) -> list[dict[str, Any]]:
@@ -49,7 +57,7 @@ def _base_params(patient_id: str, extra: dict[str, str] | None = None) -> dict[s
 
 
 # ---------------------------------------------------------------------------
-# Tool 1 — find_observations
+# Tool 1 â€” find_observations
 # ---------------------------------------------------------------------------
 
 
@@ -83,12 +91,12 @@ async def find_observations(
         # FHIR allows multiple date params; pass as comma-joined value
         extra["date"] = f"ge{date_from},le{date_to}" if date_from else f"le{date_to}"
 
-    bundle = await fhir_search("Observation", _base_params(patient_id, extra))
+    bundle = await _fhir_search("Observation", _base_params(patient_id, extra))
     return _resources_from_bundle(bundle)
 
 
 # ---------------------------------------------------------------------------
-# Tool 2 — find_conditions
+# Tool 2 â€” find_conditions
 # ---------------------------------------------------------------------------
 
 
@@ -116,12 +124,12 @@ async def find_conditions(
     if code:
         extra["code"] = code
 
-    bundle = await fhir_search("Condition", _base_params(patient_id, extra))
+    bundle = await _fhir_search("Condition", _base_params(patient_id, extra))
     return _resources_from_bundle(bundle)
 
 
 # ---------------------------------------------------------------------------
-# Tool 3 — find_procedures
+# Tool 3 â€” find_procedures
 # ---------------------------------------------------------------------------
 
 
@@ -155,12 +163,12 @@ async def find_procedures(
     elif date_to:
         extra["date"] = f"le{date_to}"
 
-    bundle = await fhir_search("Procedure", _base_params(patient_id, extra))
+    bundle = await _fhir_search("Procedure", _base_params(patient_id, extra))
     return _resources_from_bundle(bundle)
 
 
 # ---------------------------------------------------------------------------
-# Tool 4 — find_medication_history
+# Tool 4 â€” find_medication_history
 # ---------------------------------------------------------------------------
 
 
@@ -188,12 +196,12 @@ async def find_medication_history(
     if status:
         extra["status"] = status
 
-    bundle = await fhir_search("MedicationRequest", _base_params(patient_id, extra))
+    bundle = await _fhir_search("MedicationRequest", _base_params(patient_id, extra))
     return _resources_from_bundle(bundle)
 
 
 # ---------------------------------------------------------------------------
-# Tool 5 — find_imaging_studies
+# Tool 5 â€” find_imaging_studies
 # ---------------------------------------------------------------------------
 
 
@@ -221,12 +229,12 @@ async def find_imaging_studies(
     if body_site:
         extra["bodysite"] = body_site
 
-    bundle = await fhir_search("ImagingStudy", _base_params(patient_id, extra))
+    bundle = await _fhir_search("ImagingStudy", _base_params(patient_id, extra))
     return _resources_from_bundle(bundle)
 
 
 # ---------------------------------------------------------------------------
-# Tool 6 — find_documents
+# Tool 6 â€” find_documents
 # ---------------------------------------------------------------------------
 
 
@@ -254,7 +262,7 @@ async def find_documents(
     if date_from:
         extra["date"] = f"ge{date_from}"
 
-    bundle = await fhir_search("DocumentReference", _base_params(patient_id, extra))
+    bundle = await _fhir_search("DocumentReference", _base_params(patient_id, extra))
     return _resources_from_bundle(bundle)
 
 
