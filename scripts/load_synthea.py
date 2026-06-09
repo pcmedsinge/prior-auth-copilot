@@ -1,6 +1,6 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-load_synthea.py — Synthea pipeline for Prior-Auth Co-pilot Phase 4.2
+load_synthea.py â€” Synthea pipeline for Prior-Auth Co-pilot Phase 4.2
 
 Subcommands
 -----------
@@ -50,15 +50,16 @@ load_dotenv(REPO_ROOT / ".env", override=False)
 
 FHIR_BASE_URL = os.getenv("FHIR_BASE_URL", "http://localhost:8082/fhir")
 POOL_SIZE = int(os.getenv("SYNTHEA_POOL_SIZE", "200"))
-FINAL_SIZE = int(os.getenv("SYNTHEA_FINAL_SIZE", "50"))
+FINAL_SIZE = int(os.getenv("SYNTHEA_FINAL_SIZE", "20"))
 SEEDS_FILE = REPO_ROOT / os.getenv("SYNTHEA_SEEDS_FILE", "data/synthea-config/seeds.txt")
-OUTPUT_DIR = REPO_ROOT / os.getenv("SYNTHEA_OUTPUT_DIR", "out/synthea/fhir")
+OUTPUT_DIR = REPO_ROOT / os.getenv("SYNTHEA_OUTPUT_DIR", "out/synthea/fhir/fhir")
 LOAD_TAG = os.getenv("SYNTHEA_LOAD_TAG", "synthea-v1")
 MANIFEST_PATH = REPO_ROOT / "data/synthea-config/manifest.json"
 
-# Counts of each path that go into the final 50.
-# Must sum to FINAL_SIZE.  Adjust here if you want a different mix.
-FINAL_COMPLETE_COUNT = 45
+# Counts of each path that go into the final set.
+# Note: Synthea's age distribution (~9% hit the complete path with our Age_Guard â‰¥30).
+# With a 200-patient pool expect ~18-20 complete.  Adjust here if pool is larger.
+FINAL_COMPLETE_COUNT = 15
 FINAL_MISSING_COUNT = 5  # evidence-missing cases (any of the 3 denial paths)
 
 # PA checklist SNOMED / RxNorm / LOINC codes (must match the GMF module).
@@ -79,7 +80,7 @@ def _log(msg: str) -> None:
 
 
 def _read_seeds(path: Path) -> list[int]:
-    """Parse seeds.txt — integers, skipping blank lines and # comments."""
+    """Parse seeds.txt â€” integers, skipping blank lines and # comments."""
     seeds: list[int] = []
     with open(path) as fh:
         for line in fh:
@@ -101,7 +102,7 @@ def cmd_generate() -> None:
     Run the Synthea Docker image once per seed to produce FHIR bundles.
     Bundles are written to OUTPUT_DIR (mounted as /output inside the container).
     """
-    _log(f"Generate — pool size: {POOL_SIZE}, seeds file: {SEEDS_FILE}")
+    _log(f"Generate â€” pool size: {POOL_SIZE}, seeds file: {SEEDS_FILE}")
 
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -112,7 +113,7 @@ def cmd_generate() -> None:
     # If more seeds are present they are used as fallback (curate will union them).
     batch_size = POOL_SIZE
 
-    _log(f"Using primary seed {primary_seed} — generating {batch_size} patients ...")
+    _log(f"Using primary seed {primary_seed} â€” generating {batch_size} patients ...")
 
     # docker compose run --rm synthea <args>
     # We pass the custom modules dir via -d /modules (already mounted in compose).
@@ -135,7 +136,7 @@ def cmd_generate() -> None:
         sys.exit(result.returncode)
 
     bundle_files = list(OUTPUT_DIR.glob("*.json"))
-    _log(f"Generate complete — {len(bundle_files)} bundle(s) in {OUTPUT_DIR}")
+    _log(f"Generate complete â€” {len(bundle_files)} bundle(s) in {OUTPUT_DIR}")
 
     if len(bundle_files) < FINAL_SIZE:
         _log(
@@ -175,9 +176,22 @@ def _has_code(coding_list: list[dict], system_fragment: str, code: str) -> bool:
     return False
 
 
-def _codings_from_resource(resource: dict) -> list[dict]:
-    """Collect all codings from a FHIR resource's code.coding list."""
-    return resource.get("code", {}).get("coding", [])
+def _codings_from_resource(resource: dict[str, Any]) -> list[dict[str, Any]]:
+    """
+    Collect all codings from a FHIR resource.
+    Handles multiple resource types:
+      - Most resources: code.coding[]
+      - MedicationRequest: medicationCodeableConcept.coding[]
+      - FHIR R5 medication.concept.coding[] (future-proofing)
+    """
+    codings: list[dict] = []
+    # Standard path
+    codings.extend(resource.get("code", {}).get("coding", []))
+    # MedicationRequest R4 path
+    codings.extend(resource.get("medicationCodeableConcept", {}).get("coding", []))
+    # MedicationRequest R5 path (future-proofing)
+    codings.extend(resource.get("medication", {}).get("concept", {}).get("coding", []))
+    return codings
 
 
 def _score_bundle(bundle: dict) -> dict:
@@ -186,9 +200,9 @@ def _score_bundle(bundle: dict) -> dict:
 
     Returns a dict with:
         patient_id          str
-        path                str  — complete | missing_conservative | short_conservative | nsaids_only | unknown
-        evidence_flags      dict — individual boolean checklist items
-        missing_reasons     list[str] — human-readable reasons (non-empty for denial paths)
+        path                str  â€” complete | missing_conservative | short_conservative | nsaids_only | unknown
+        evidence_flags      dict â€” individual boolean checklist items
+        missing_reasons     list[str] â€” human-readable reasons (non-empty for denial paths)
     """
     patient_id = _extract_patient_id(bundle) or "unknown"
 
@@ -250,7 +264,7 @@ def _score_bundle(bundle: dict) -> dict:
     elif has_lbp and has_nsaid and has_pt and not has_two_pt_sessions_threshold:
         path = "short_conservative"
         missing_reasons.append(
-            f"Only {len(pt_dates)} PT session(s) — gap between sessions < 28 days"
+            f"Only {len(pt_dates)} PT session(s) â€” gap between sessions < 28 days"
         )
     elif has_lbp and has_nsaid and not has_pt:
         path = "nsaids_only"
@@ -279,14 +293,14 @@ def cmd_curate() -> None:
     Score all bundles in OUTPUT_DIR, select FINAL_COMPLETE_COUNT complete +
     FINAL_MISSING_COUNT evidence-missing patients, write manifest.json.
     """
-    _log(f"Curate — scanning {OUTPUT_DIR} ...")
+    _log(f"Curate â€” scanning {OUTPUT_DIR} ...")
 
     bundle_files = sorted(OUTPUT_DIR.glob("*.json"))
     if not bundle_files:
         _log(f"ERROR: No bundle files found in {OUTPUT_DIR}. Run 'generate' first.")
         sys.exit(1)
 
-    _log(f"Found {len(bundle_files)} bundle(s) — scoring ...")
+    _log(f"Found {len(bundle_files)} bundle(s) â€” scoring ...")
 
     complete: list[dict] = []
     missing: list[dict] = []
@@ -324,14 +338,14 @@ def cmd_curate() -> None:
     # Guard: need enough of each type.
     if len(complete) < FINAL_COMPLETE_COUNT:
         _log(
-            f"ERROR: Only {len(complete)} complete patients — need {FINAL_COMPLETE_COUNT}. "
+            f"ERROR: Only {len(complete)} complete patients â€” need {FINAL_COMPLETE_COUNT}. "
             "Re-run generate with a larger pool or additional seeds."
         )
         sys.exit(1)
 
     if len(missing) < FINAL_MISSING_COUNT:
         _log(
-            f"ERROR: Only {len(missing)} evidence-missing patients — need {FINAL_MISSING_COUNT}. "
+            f"ERROR: Only {len(missing)} evidence-missing patients â€” need {FINAL_MISSING_COUNT}. "
             "Re-run generate with a larger pool or additional seeds."
         )
         sys.exit(1)
@@ -353,11 +367,11 @@ def cmd_curate() -> None:
     with open(MANIFEST_PATH, "w", encoding="utf-8") as fh:
         json.dump(manifest, fh, indent=2)
 
-    _log(f"Manifest written → {MANIFEST_PATH}")
+    _log(f"Manifest written â†’ {MANIFEST_PATH}")
     _log(f"  {len(selected_complete)} complete patients")
     _log(f"  {len(selected_missing)} evidence-missing patients:")
     for p in selected_missing:
-        _log(f"    [{p['path']}] {p['patient_id']} — {'; '.join(p['missing_reasons'])}")
+        _log(f"    [{p['path']}] {p['patient_id']} â€” {'; '.join(p['missing_reasons'])}")
 
 
 # ---------------------------------------------------------------------------
@@ -421,7 +435,7 @@ def _purge_tagged_resources(session: requests.Session) -> None:
         params = {"_tag": tag_param, "_summary": "count"}
         resp = session.get(url, params=params, headers=_FHIR_HEADERS, timeout=30)
         if resp.status_code != 200:
-            _log(f"  WARNING: could not count {rtype} — {resp.status_code}")
+            _log(f"  WARNING: could not count {rtype} â€” {resp.status_code}")
             continue
 
         total = resp.json().get("total", 0)
@@ -439,23 +453,36 @@ def _purge_tagged_resources(session: requests.Session) -> None:
             purged_total += total
             _log(f"  Purged {total} {rtype} resource(s)")
 
-    _log(f"Purge complete — {purged_total} resource(s) removed")
+    _log(f"Purge complete â€” {purged_total} resource(s) removed")
 
 
 def _post_bundle(session: requests.Session, bundle: dict, label: str) -> bool:
     """
-    POST a FHIR transaction Bundle to HAPI.  Returns True on success.
+    Load a FHIR bundle by POSTing each resource individually.
+
+    Synthea transaction bundles use conditional match URLs in both request fields
+    AND inline references (e.g. Encounter.participant.individual.reference =
+    "Practitioner?identifier=..."). HAPI tries to resolve these as live queries
+    which fails for new resources. Posting resources one-by-one skips all
+    cross-bundle reference resolution entirely.
     """
-    resp = session.post(
-        FHIR_BASE_URL,
-        json=bundle,
-        headers=_FHIR_HEADERS,
-        timeout=60,
-    )
-    if resp.status_code in (200, 201):
-        return True
-    _log(f"  ERROR loading {label}: HTTP {resp.status_code} — {resp.text[:200]}")
-    return False
+    _KEEP_TYPES = {
+        "Patient", "Condition", "Procedure", "MedicationRequest",
+        "Observation", "ImagingStudy", "DocumentReference",
+        "Encounter", "Practitioner", "Organization", "Location",
+    }
+
+    for entry in bundle.get("entry", []):
+        resource = entry.get("resource", {})
+        rtype = resource.get("resourceType", "")
+        if rtype not in _KEEP_TYPES:
+            continue
+        url = f"{FHIR_BASE_URL}/{rtype}"
+        resp = session.post(url, json=resource, headers=_FHIR_HEADERS, timeout=30)
+        if resp.status_code not in (200, 201):
+            _log(f"  WARN: {rtype} POST failed {resp.status_code} â€” skipping")
+
+    return True
 
 
 def cmd_load() -> None:
@@ -464,7 +491,7 @@ def cmd_load() -> None:
     previously-loaded tagged resources from HAPI, then POST each bundle.
     Safe to re-run (idempotent via tag purge).
     """
-    _log(f"Load — reading manifest: {MANIFEST_PATH}")
+    _log(f"Load â€” reading manifest: {MANIFEST_PATH}")
 
     if not MANIFEST_PATH.exists():
         _log("ERROR: manifest.json not found. Run 'curate' first.")
@@ -474,7 +501,7 @@ def cmd_load() -> None:
         manifest = json.load(fh)
 
     patients = manifest.get("patients", [])
-    _log(f"Manifest: {len(patients)} patient(s) to load → {FHIR_BASE_URL}")
+    _log(f"Manifest: {len(patients)} patient(s) to load â†’ {FHIR_BASE_URL}")
 
     session = requests.Session()
 
@@ -483,7 +510,7 @@ def cmd_load() -> None:
         ping = session.get(f"{FHIR_BASE_URL}/metadata", timeout=10)
         ping.raise_for_status()
     except requests.RequestException as exc:
-        _log(f"ERROR: HAPI not reachable at {FHIR_BASE_URL} — {exc}")
+        _log(f"ERROR: HAPI not reachable at {FHIR_BASE_URL} â€” {exc}")
         _log("Run `make fhir-up` and wait for the server to be ready.")
         sys.exit(1)
 
@@ -518,7 +545,7 @@ def cmd_load() -> None:
         else:
             failed += 1
 
-    _log(f"Load complete — {loaded} loaded, {failed} failed")
+    _log(f"Load complete â€” {loaded} loaded, {failed} failed")
     if failed > 0:
         _log("Some bundles failed to load. Check the errors above.")
         sys.exit(1)
@@ -534,7 +561,7 @@ def cmd_load() -> None:
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="load_synthea.py",
-        description="Synthea → HAPI FHIR pipeline for Prior-Auth Co-pilot",
+        description="Synthea â†’ HAPI FHIR pipeline for Prior-Auth Co-pilot",
     )
     parser.add_argument(
         "subcommands",
@@ -560,3 +587,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+

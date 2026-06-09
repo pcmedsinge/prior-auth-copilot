@@ -1,0 +1,304 @@
+{
+  "version": "1",
+  "generated_by": "load_synthea.py curate",
+  "total": 20,
+  "complete_count": 15,
+  "evidence_missing_count": 5,
+  "patients": [
+    {
+      "patient_id": "b3244f8c-91e0-653f-f921-e29aadc07fea",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Augustine565_Witting912_b3244f8c-91e0-653f-f921-e29aadc07fea.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "b7daf75c-7c86-43b2-c52a-6fecb76f57d9",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Bryan958_Lueilwitz711_b7daf75c-7c86-43b2-c52a-6fecb76f57d9.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "379e7dfe-0932-b6bf-0c35-c9352db01b0a",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Byron202_Wunsch504_379e7dfe-0932-b6bf-0c35-c9352db01b0a.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "26997bf5-cde7-9a53-7608-086a0eb54197",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Dirk334_Moen819_26997bf5-cde7-9a53-7608-086a0eb54197.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "a5bded29-a2e1-0d3f-82f9-aa81f59c01af",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Genna99_Miller503_a5bded29-a2e1-0d3f-82f9-aa81f59c01af.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "5c1bc96b-cf88-9677-2121-12af7158aee1",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\In\u00e9s791_Silvia880_Casas271_5c1bc96b-cf88-9677-2121-12af7158aee1.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": false,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "b41c0291-2bc4-f20a-0c9f-96103d8205aa",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Irvin970_Auer97_b41c0291-2bc4-f20a-0c9f-96103d8205aa.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "20c5c7f7-5aa8-5b89-a9b5-e28319361f34",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Kirby843_Thiel172_20c5c7f7-5aa8-5b89-a9b5-e28319361f34.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "52c088d9-b553-449f-a5b5-0f89899472e5",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Nobuko304_Shanahan202_52c088d9-b553-449f-a5b5-0f89899472e5.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "20df5fde-f866-a8e9-8475-e477a8f05707",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Reid278_Okuneva707_20df5fde-f866-a8e9-8475-e477a8f05707.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": false,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "dfd2be11-85c7-f81f-d825-f3bed0579ed0",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Rich940_Wilkinson796_dfd2be11-85c7-f81f-d825-f3bed0579ed0.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "44ed1dc2-0bc7-4b9f-82fd-88ebb655d183",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Roxie199_Nicki254_King743_44ed1dc2-0bc7-4b9f-82fd-88ebb655d183.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "a6db68d6-2d1d-e0b4-2d84-ba3c8f0a080d",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Shantae970_Fiona703_Zemlak964_a6db68d6-2d1d-e0b4-2d84-ba3c8f0a080d.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "ff93034f-4b7e-7e81-9dcf-7e8514f25ad1",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Stephaine613_Carmelia328_Veum823_ff93034f-4b7e-7e81-9dcf-7e8514f25ad1.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "be8a72b8-6b18-2d1d-712e-9d1231434388",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Tom274_Ullrich385_be8a72b8-6b18-2d1d-712e-9d1231434388.json",
+      "path": "complete",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": true,
+        "has_pain_score": true,
+        "has_pt": true,
+        "has_two_pt_sessions_threshold": true
+      },
+      "missing_reasons": []
+    },
+    {
+      "patient_id": "b007fb7b-e77c-4d09-9133-0269f8d177b4",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Ai120_Gutmann970_b007fb7b-e77c-4d09-9133-0269f8d177b4.json",
+      "path": "missing_conservative",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": false,
+        "has_pain_score": false,
+        "has_pt": false,
+        "has_two_pt_sessions_threshold": false
+      },
+      "missing_reasons": [
+        "No NSAID prescription documented",
+        "No physical therapy procedure documented"
+      ]
+    },
+    {
+      "patient_id": "744896ae-43a7-a972-289e-e56d3b21ec5e",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Alida395_Odilia72_Armstrong51_744896ae-43a7-a972-289e-e56d3b21ec5e.json",
+      "path": "missing_conservative",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": true,
+        "has_nsaid": false,
+        "has_pain_score": false,
+        "has_pt": false,
+        "has_two_pt_sessions_threshold": false
+      },
+      "missing_reasons": [
+        "No NSAID prescription documented",
+        "No physical therapy procedure documented"
+      ]
+    },
+    {
+      "patient_id": "7e10ce72-ba0b-624c-4b3d-e4b9d04e14c5",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Amos720_Roob72_7e10ce72-ba0b-624c-4b3d-e4b9d04e14c5.json",
+      "path": "missing_conservative",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": false,
+        "has_nsaid": false,
+        "has_pain_score": false,
+        "has_pt": false,
+        "has_two_pt_sessions_threshold": false
+      },
+      "missing_reasons": [
+        "No NSAID prescription documented",
+        "No physical therapy procedure documented"
+      ]
+    },
+    {
+      "patient_id": "28b40bef-5e1c-4cdb-c6f5-75b34c5aea77",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Andrew29_Lakin515_28b40bef-5e1c-4cdb-c6f5-75b34c5aea77.json",
+      "path": "missing_conservative",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": false,
+        "has_nsaid": false,
+        "has_pain_score": false,
+        "has_pt": false,
+        "has_two_pt_sessions_threshold": false
+      },
+      "missing_reasons": [
+        "No NSAID prescription documented",
+        "No physical therapy procedure documented"
+      ]
+    },
+    {
+      "patient_id": "2da824e1-99dd-edf0-e594-2b0e1449e60d",
+      "bundle_path": "out\\synthea\\fhir\\fhir\\Antonia30_Russel238_2da824e1-99dd-edf0-e594-2b0e1449e60d.json",
+      "path": "missing_conservative",
+      "evidence_flags": {
+        "has_lbp": true,
+        "has_radiculopathy": false,
+        "has_nsaid": false,
+        "has_pain_score": false,
+        "has_pt": false,
+        "has_two_pt_sessions_threshold": false
+      },
+      "missing_reasons": [
+        "No NSAID prescription documented",
+        "No physical therapy procedure documented"
+      ]
+    }
+  ]
+}
