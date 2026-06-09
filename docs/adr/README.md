@@ -14,6 +14,9 @@ Format: lightweight [MADR-style](https://adr.github.io/madr/) — Context → De
 | [0004](0004-embedding-model.md) | Embedding model for the policy corpus (`text-embedding-3-small`) | Accepted |
 | [0005](0005-vector-store.md) | Vector store for the policy corpus (LanceDB embedded) | Accepted |
 | [0006](0006-reasoner-llm.md) | LLM for the Medical Necessity Reasoner (`gpt-4o`) | Accepted |
+| [0007](0007-reviewer-ui.md) | Reviewer UI surface (`rich` CLI) | Accepted |
+| [0008](0008-checkpoint-persistence.md) | LangGraph checkpoint persistence (SQLite) | Accepted |
+| [0009](0009-mock-payer-server.md) | Mock payer PAS `$submit` endpoint (HAPI + FastAPI wrapper) | Accepted |
 
 ## When to write an ADR
 
