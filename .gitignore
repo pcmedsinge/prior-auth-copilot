@@ -40,7 +40,8 @@ data/synthea/output/
 models/
 
 # Synthea generated output (re-created by `make load-synthea`)
-out/
+out/*
+!out/.gitkeep
 
 # Eval runner JSON outputs (contain patient IDs — regenerate locally)
 evals/results/*.json

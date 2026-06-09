@@ -3,7 +3,7 @@
 > **Open-source, agentic, FHIR-native Prior Authorization co-pilot — built for the CMS-0057 January 2027 mandate.**
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status: Phase 4.4 — Bundle Builder + Reviewer](https://img.shields.io/badge/status-Phase%204.4%20%C2%B7%20Bundle%20Builder-orange.svg)](docs/phases/)
+[![Status: Phase 4.5 — Evals + v1.0](https://img.shields.io/badge/status-Phase%204.5%20%C2%B7%20Evals%20%2B%20v1.0-orange.svg)](docs/phases/)
 [![FHIR R4](https://img.shields.io/badge/FHIR-R4-red.svg)](https://hl7.org/fhir/R4/)
 [![Da Vinci PAS](https://img.shields.io/badge/Da%20Vinci-PAS%20%C2%B7%20CRD%20%C2%B7%20DTR-purple.svg)](https://hl7.org/fhir/us/davinci-pas/)
 
@@ -85,8 +85,8 @@ Built in weekly slices. Each slice ships a runnable demo and a LinkedIn write-up
 | [4.1](docs/phases/4.1-problem-framing.md) | Problem framing, repo, architecture, LEADERSHIP.md, ADR-0001 | ✅ Done |
 | [4.2](docs/phases/4.2-evidence-retrieval.md) | Synthea data + FHIR MCP evidence retrieval | ✅ Shipped |
 | [4.3](docs/phases/4.3-medical-necessity-reasoner.md) | Medical necessity reasoner + RAG over NCDs/LCDs | ✅ Shipped |
-| [4.4](docs/phases/4.4-pas-bundle-reviewer.md) | Da Vinci PAS bundle builder + reviewer agent | 🔄 In progress |
-| [4.5](docs/phases/4.5-evals-release.md) | Evals harness, outcome metrics, v1.0 release | ⏳ |
+| [4.4](docs/phases/4.4-pas-bundle-reviewer.md) | Da Vinci PAS bundle builder + reviewer agent | ✅ Shipped |
+| [4.5](docs/phases/4.5-evals-release.md) | Evals harness, outcome metrics, v1.0 release | 🔄 In progress |
 
 Track live progress on the public [GitHub Projects board](https://github.com/users/pcmedsinge/projects) *(link will be live once board is created)*.
 
@@ -156,41 +156,38 @@ prior-auth-copilot/
 
 ---
 
-## Quick start (Phase 4.2 — Synthea pipeline + Evidence Gatherer)
+## Quick start
 
-**Prerequisites**: Docker Desktop running, Git Bash or WSL2 (Windows), Python 3.12+, `OPENAI_API_KEY` set.
+**Prerequisites**: Docker Desktop, Git Bash or WSL2 (Windows), Python 3.12+, `OPENAI_API_KEY` in `.env`.
 
 ```bash
-# 1. Fetch IG tarballs (once per checkout)
-bash docker/hapi/fetch_igs.sh
+# Clone and enter the repo
+git clone https://github.com/pcmedsinge/prior-auth-copilot.git
+cd prior-auth-copilot
+cp .env.example .env   # add your OPENAI_API_KEY
 
-# 2. Start the local HAPI FHIR server (waits until healthy)
-make fhir-up
+# Start everything (HAPI ×2 + patients + policy store + mock payer)
+# First run: ~10-15 min (builds images, generates patients, embeds policies)
+bash start.sh
 
-# 3. Build the Synthea image, generate ~200 patients, curate 50, load into HAPI
-make load-synthea
+# Run the end-to-end interactive demo
+make demo-e2e PATIENT=$(python -c "import json; m=json.load(open('data/synthea-config/manifest.json')); print(m['patients'][0]['patient_id'])")
 
-# 4. Verify HAPI — should print "SMOKE TEST PASSED"
-make smoke
+# Run all evals and produce the v1.0 scorecard
+make evals
 
-# 5. Verify all 6 evidence tools callable
-make smoke-tools
-
-# 6. Run unit tests (no live HAPI or OpenAI needed)
-make test
-
-# 7. Run the end-to-end evidence demo
-#    Get a patient ID from the manifest:
-#      python -c "import json; m=json.load(open('data/synthea-config/manifest.json')); print(m['patients'][0]['patient_id'])"
-make demo-evidence PATIENT=<patient_id_from_manifest>
-
-# 8. Run the eval harness against all 20 golden cases
-make evals-4.2
+# Stop everything
+bash stop.sh
 ```
 
-Full pipeline runs from a clean checkout in **< 10 minutes** on Docker Desktop.
+**Subsequent runs** (data already loaded):
+```bash
+bash start.sh --no-synthea --no-policies   # fast restart (~90s)
+```
 
-> **Windows note**: `make` requires Git Bash or WSL2. Open the terminal in one of those shells before running the commands above.
+> **Windows note**: `start.sh`, `stop.sh`, and `make` require Git Bash or WSL2.
+
+See [docs/runbook/operations.md](docs/runbook/operations.md) for troubleshooting and the service map.
 
 ---
 

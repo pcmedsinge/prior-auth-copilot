@@ -7,6 +7,20 @@ SHELL := /bin/bash
 
 FHIR_BASE_URL ?= http://localhost:8082/fhir
 
+# ── Full stack start / stop ────────────────────────────────────────────────────
+
+.PHONY: start
+start: ## ⚡ Start the full stack (HAPI x2 + patients + policies + mock payer + smoke test)
+	bash start.sh
+
+.PHONY: start-fast
+start-fast: ## ⚡ Fast restart — skip Synthea generation and policy ingestion
+	bash start.sh --no-synthea --no-policies
+
+.PHONY: stop
+stop: ## 🛑 Stop all services (HAPI containers + mock payer process)
+	bash stop.sh
+
 # ── FHIR server ──────────────────────────────────────────────────────────────
 
 .PHONY: fhir-up
@@ -132,6 +146,18 @@ evals-4.3-ci: ## Run Phase 4.3 evals in CI mode
 .PHONY: evals-4.4
 evals-4.4: ## Run Phase 4.4 Bundle Builder eval harness
 	python evals/runners/run_4_4.py
+
+.PHONY: evals
+evals: ## Run ALL phase evals and produce the v1.0 combined scorecard
+	python evals/runners/run_all.py
+
+.PHONY: evals-ci
+evals-ci: ## Run all evals in CI mode (exits 1 if any gate missed)
+	python evals/runners/run_all.py --ci
+
+.PHONY: evals-fast
+evals-fast: ## Run all evals without LLM second pass (faster, deterministic only)
+	python evals/runners/run_all.py --no-llm
 
 # ── Policy corpus ─────────────────────────────────────────────────────────────
 
