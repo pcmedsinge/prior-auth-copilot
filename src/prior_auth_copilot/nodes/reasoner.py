@@ -213,10 +213,11 @@ def reasoner_node(state: PAState) -> dict:
     log.info("reasoner_node.retrieved", chunks=len(policy_chunks))
 
     # ── Step 2: LLM reasoning ─────────────────────────────────────────────
+    # model_kwargs used instead of response_format= to avoid LangChain deprecation warning
     llm = ChatOpenAI(
         model=REASONER_MODEL,
         temperature=0,
-        response_format={"type": "json_object"},
+        model_kwargs={"response_format": {"type": "json_object"}},
     )
 
     user_msg = _build_user_prompt(patient_id, service, pkg, policy_chunks)
